@@ -1,8 +1,8 @@
+import * as dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });
+
 import { UserRepository } from "./repositories/userRepository";
 import { v4 as uuid } from "uuid";
-import * as dotenv from "dotenv";
-
-dotenv.config({ path: ".env.local" });
 
 async function test() {
   try {
