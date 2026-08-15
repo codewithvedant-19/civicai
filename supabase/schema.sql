@@ -191,3 +191,4 @@ INSERT INTO settings (id, data) VALUES (
 ) ON CONFLICT (id) DO NOTHING;
 
 -- Pre-seed Damage Classes and Badges if empty (or handled by your seed script)
+
