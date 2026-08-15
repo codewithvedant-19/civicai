@@ -1,62 +1,69 @@
-import { getDb } from "@/lib/db";
+import { db } from "@/db";
+import { issues } from "@/db/schema";
+import { eq, ne, and, gt, lt } from "drizzle-orm";
 import type { Issue, Confirmation, IssueStatus } from "@/domain/types";
 import { v4 as uuid } from "uuid";
 
 export const IssueRepository = {
   async findById(id: string): Promise<Issue | undefined> {
-    const db = await getDb();
-    return db.data.issues.find((i) => i.id === id);
+    const [issue] = await db.select().from(issues).where(eq(issues.id, id));
+    return issue as Issue | undefined;
   },
 
   async list(): Promise<Issue[]> {
-    const db = await getDb();
-    return db.data.issues;
+    return (await db.select().from(issues)) as Issue[];
   },
 
   async listOpenNear(lat: number, lng: number, radiusDeg = 0.002): Promise<Issue[]> {
-    const db = await getDb();
-    return db.data.issues.filter(
-      (i) =>
-        i.status !== "resolved" &&
-        Math.abs(i.lat - lat) < radiusDeg &&
-        Math.abs(i.lng - lng) < radiusDeg
-    );
+    return (await db
+      .select()
+      .from(issues)
+      .where(
+        and(
+          ne(issues.status, "resolved"),
+          gt(issues.lat, lat - radiusDeg),
+          lt(issues.lat, lat + radiusDeg),
+          gt(issues.lng, lng - radiusDeg),
+          lt(issues.lng, lng + radiusDeg)
+        )
+      )) as Issue[];
   },
 
   async findByImageHash(hash: string): Promise<Issue | undefined> {
-    const db = await getDb();
-    return db.data.issues.find((i) => i.imageHash === hash);
+    const [issue] = await db.select().from(issues).where(eq(issues.imageHash, hash));
+    return issue as Issue | undefined;
   },
 
   async create(issue: Omit<Issue, "id" | "createdAt" | "updatedAt" | "confirmations">): Promise<Issue> {
-    const db = await getDb();
     const now = new Date().toISOString();
-    const record: Issue = { ...issue, id: uuid(), confirmations: [], createdAt: now, updatedAt: now };
-    db.data.issues.push(record);
-    await db.write();
-    return record;
+    const [record] = await db
+      .insert(issues)
+      .values({ ...issue, id: uuid(), confirmations: [], createdAt: now, updatedAt: now })
+      .returning();
+    return record as Issue;
   },
 
   async addConfirmation(issueId: string, confirmation: Confirmation): Promise<Issue | undefined> {
-    const db = await getDb();
-    const issue = db.data.issues.find((i) => i.id === issueId);
+    const issue = await this.findById(issueId);
     if (!issue) return undefined;
     // enforce uniqueness per (user, issue) — a user confirming twice never counts twice
     if (issue.confirmations.some((c) => c.userId === confirmation.userId)) return issue;
     if (issue.reporterId === confirmation.userId) return issue; // reporter can't confirm own report
-    issue.confirmations.push(confirmation);
-    issue.updatedAt = new Date().toISOString();
-    await db.write();
-    return issue;
+    const [updated] = await db
+      .update(issues)
+      .set({ confirmations: [...issue.confirmations, confirmation], updatedAt: new Date().toISOString() })
+      .where(eq(issues.id, issueId))
+      .returning();
+    return updated as Issue;
   },
 
   async update(id: string, patch: Partial<Issue>): Promise<Issue | undefined> {
-    const db = await getDb();
-    const issue = db.data.issues.find((i) => i.id === id);
-    if (!issue) return undefined;
-    Object.assign(issue, patch, { updatedAt: new Date().toISOString() });
-    await db.write();
-    return issue;
+    const [updated] = await db
+      .update(issues)
+      .set({ ...patch, updatedAt: new Date().toISOString() })
+      .where(eq(issues.id, id))
+      .returning();
+    return updated as Issue | undefined;
   },
 
   async setStatus(id: string, status: IssueStatus): Promise<Issue | undefined> {
@@ -64,17 +71,14 @@ export const IssueRepository = {
   },
 
   async listByReporter(userId: string): Promise<Issue[]> {
-    const db = await getDb();
-    return db.data.issues.filter((i) => i.reporterId === userId);
+    return (await db.select().from(issues).where(eq(issues.reporterId, userId))) as Issue[];
   },
 
   async listByAuthority(authorityId: string): Promise<Issue[]> {
-    const db = await getDb();
-    return db.data.issues.filter((i) => i.authorityId === authorityId);
+    return (await db.select().from(issues).where(eq(issues.authorityId, authorityId))) as Issue[];
   },
 
   async listAssignedToOfficer(officerId: string): Promise<Issue[]> {
-    const db = await getDb();
-    return db.data.issues.filter((i) => i.assignedOfficerId === officerId);
+    return (await db.select().from(issues).where(eq(issues.assignedOfficerId, officerId))) as Issue[];
   },
 };

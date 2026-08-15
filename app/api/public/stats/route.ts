@@ -4,6 +4,8 @@ import { AuthorityRepository } from "@/repositories/jurisdictionRepository";
 import { DamageClassRepository } from "@/repositories/miscRepositories";
 
 // Public transparency endpoint: aggregated only, never exposes reporter identity.
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const issues = await IssueRepository.list();
   const authorities = await AuthorityRepository.list();

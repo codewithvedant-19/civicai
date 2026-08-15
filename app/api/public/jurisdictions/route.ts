@@ -6,6 +6,8 @@ import { JurisdictionRepository } from "@/repositories/jurisdictionRepository";
 // fictional demo coordinates rather than real geography. Adding a new city
 // is still a pure data operation (seed a new Jurisdiction row) — this route
 // just reflects whatever is seeded, never hardcodes a city list.
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const jurisdictions = await JurisdictionRepository.list();
   return NextResponse.json({

@@ -4,6 +4,8 @@ import { RbacService } from "@/services/rbacService";
 import { UserRepository } from "@/repositories/userRepository";
 import { OfficerRepository, AuditLogRepository } from "@/repositories/miscRepositories";
 import { AuthorityRepository, JurisdictionRepository } from "@/repositories/jurisdictionRepository";
+import { db } from "@/db";
+import { officers } from "@/db/schema";
 import type { Role } from "@/domain/types";
 
 // This is the ONLY place a user's role can become authority_admin, officer,
@@ -42,9 +44,7 @@ export async function POST(req: NextRequest) {
   if (role === "officer" && authorityId) {
     const existing = await OfficerRepository.findByUserId(userId);
     if (!existing) {
-      const db = await (await import("@/lib/db")).getDb();
-      db.data.officers.push({ userId, authorityId, assignedIssueIds: [] });
-      await db.write();
+      await db.insert(officers).values({ userId, authorityId, assignedIssueIds: [] });
     }
   }
 

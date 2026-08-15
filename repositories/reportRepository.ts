@@ -1,28 +1,35 @@
-import { getDb } from "@/lib/db";
+import { db } from "@/db";
+import { reports } from "@/db/schema";
+import { eq, and, gte } from "drizzle-orm";
 import type { Report } from "@/domain/types";
 import { v4 as uuid } from "uuid";
 
 export const ReportRepository = {
   async create(report: Omit<Report, "id" | "createdAt">): Promise<Report> {
-    const db = await getDb();
-    const record: Report = { ...report, id: uuid(), createdAt: new Date().toISOString() };
-    db.data.reports.push(record);
-    await db.write();
-    return record;
+    const [record] = await db
+      .insert(reports)
+      .values({ ...report, id: uuid(), createdAt: new Date().toISOString() })
+      .returning();
+    return record as Report;
   },
 
   async listByUser(userId: string): Promise<Report[]> {
-    const db = await getDb();
-    return db.data.reports.filter((r) => r.userId === userId);
+    return (await db.select().from(reports).where(eq(reports.userId, userId))) as Report[];
   },
 
   async countByUserSince(userId: string, sinceIso: string): Promise<number> {
-    const db = await getDb();
-    return db.data.reports.filter((r) => r.userId === userId && r.createdAt >= sinceIso).length;
+    const rows = await db
+      .select()
+      .from(reports)
+      .where(and(eq(reports.userId, userId), gte(reports.createdAt, sinceIso)));
+    return rows.length;
   },
 
   async findByHashAndUser(hash: string, userId: string): Promise<Report | undefined> {
-    const db = await getDb();
-    return db.data.reports.find((r) => r.imageHash === hash && r.userId === userId);
+    const [row] = await db
+      .select()
+      .from(reports)
+      .where(and(eq(reports.imageHash, hash), eq(reports.userId, userId)));
+    return row as Report | undefined;
   },
 };

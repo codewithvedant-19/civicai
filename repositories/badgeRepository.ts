@@ -1,28 +1,31 @@
-import { getDb } from "@/lib/db";
+import { db } from "@/db";
+import { badges, userBadges } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
 import type { Badge, UserBadge } from "@/domain/types";
 
 export const BadgeRepository = {
   async listAll(): Promise<Badge[]> {
-    const db = await getDb();
-    return db.data.badges;
+    return (await db.select().from(badges)) as Badge[];
   },
 
   async listForUser(userId: string): Promise<UserBadge[]> {
-    const db = await getDb();
-    return db.data.userBadges.filter((b) => b.userId === userId);
+    return (await db.select().from(userBadges).where(eq(userBadges.userId, userId))) as UserBadge[];
   },
 
   async hasBadge(userId: string, badgeId: string): Promise<boolean> {
-    const db = await getDb();
-    return db.data.userBadges.some((b) => b.userId === userId && b.badgeId === badgeId);
+    const rows = await db
+      .select()
+      .from(userBadges)
+      .where(and(eq(userBadges.userId, userId), eq(userBadges.badgeId, badgeId)));
+    return rows.length > 0;
   },
 
   async award(userId: string, badgeId: string): Promise<UserBadge | null> {
-    const db = await getDb();
-    if (db.data.userBadges.some((b) => b.userId === userId && b.badgeId === badgeId)) return null;
-    const record: UserBadge = { userId, badgeId, earnedAt: new Date().toISOString() };
-    db.data.userBadges.push(record);
-    await db.write();
-    return record;
+    if (await this.hasBadge(userId, badgeId)) return null;
+    const [record] = await db
+      .insert(userBadges)
+      .values({ userId, badgeId, earnedAt: new Date().toISOString() })
+      .returning();
+    return record as UserBadge;
   },
 };
