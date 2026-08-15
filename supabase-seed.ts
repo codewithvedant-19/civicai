@@ -3,6 +3,7 @@ dotenv.config({ path: ".env.local" });
 
 import { supabaseServer } from "./lib/supabase";
 import { v4 as uuid } from "uuid";
+import bcrypt from "bcryptjs";
 
 async function seed() {
   console.log("Seeding Supabase static data...");
@@ -64,6 +65,48 @@ async function seed() {
     { id: "tshirt", label: "CivicRoad AI T-Shirt", description: "Simulated merch reward.", point_cost: 500, stock: 10 },
   ];
   await supabaseServer.from("rewards_catalog").upsert(rewards);
+
+  // 5. Demo Users
+  console.log("Seeding demo users...");
+  const passwordHash = await bcrypt.hash("password123", 10);
+  
+  const mk = (name: string, email: string, role: string, authorityId?: string) => ({
+    id: uuid(),
+    name,
+    email,
+    password_hash: passwordHash,
+    role,
+    points_balance: 0,
+    level: 1,
+    streak_count: 0,
+    authority_id: authorityId || null,
+  });
+
+  const citizen1 = mk("Amara Chen", "citizen@demo.dev", "citizen");
+  const citizen2 = mk("Devon Fields", "citizen2@demo.dev", "citizen");
+  const officer = mk("Officer Priya Nair", "officer@demo.dev", "officer", springfieldAuthorityId);
+  const authorityAdmin = mk("Marcus Lee", "authority@demo.dev", "authority_admin", springfieldAuthorityId);
+  const superAdmin = mk("Super Admin", "admin@demo.dev", "super_admin");
+
+  const users = [citizen1, citizen2, officer, authorityAdmin, superAdmin];
+  
+  // Use a loop to insert and ignore on conflict
+  for (const user of users) {
+    const { error } = await supabaseServer.from("users").upsert(user, { onConflict: "email" });
+    if (error) {
+      console.error(`Error inserting user ${user.email}:`, error);
+    }
+  }
+
+  // Ensure officer is in officers table
+  const { data: officerRecord } = await supabaseServer.from("users").select("id").eq("email", "officer@demo.dev").single();
+  if (officerRecord) {
+    await supabaseServer.from("officers").upsert({
+      user_id: officerRecord.id,
+      authority_id: springfieldAuthorityId,
+      assigned_issue_ids: [],
+    });
+  }
 
   console.log("✅ Seeding complete.");
 }
