@@ -16,6 +16,7 @@ import {
   getJurisdictionResolver,
   getAuthorityIntegration,
 } from "@/lib/registry";
+import { v4 as uuid } from "uuid";
 
 export const runtime = "nodejs";
 
@@ -45,7 +46,24 @@ export async function POST(req: NextRequest) {
   const buffer = Buffer.from(arrayBuffer);
   const base64 = buffer.toString("base64");
   const imageHash = await computePerceptualHash(buffer);
-  const imageUrl = `data:${file.type};base64,${base64}`;
+  
+  // Upload to Supabase Storage
+  const { supabaseServer } = await import("@/lib/supabase");
+  const fileName = `${Date.now()}-${uuid()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+  const { error: storageError } = await supabaseServer.storage
+    .from("road-reports")
+    .upload(fileName, buffer, {
+      contentType: file.type,
+      upsert: false,
+    });
+
+  if (storageError) {
+    console.error("Storage upload error:", storageError);
+    return NextResponse.json({ error: "Failed to upload image." }, { status: 500 });
+  }
+
+  const { data: publicUrlData } = supabaseServer.storage.from("road-reports").getPublicUrl(fileName);
+  const imageUrl = publicUrlData.publicUrl;
 
   // Reject an exact duplicate image re-submitted by the same user.
   const priorSameUser = await ReportRepository.findByHashAndUser(imageHash, user!.id);

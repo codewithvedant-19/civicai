@@ -5,9 +5,8 @@ import { UserRepository } from "@/repositories/userRepository";
 import { OfficerRepository, AuditLogRepository } from "@/repositories/miscRepositories";
 import { AuthorityRepository, JurisdictionRepository } from "@/repositories/jurisdictionRepository";
 import type { Role } from "@/domain/types";
+import { supabaseServer } from "@/lib/supabase";
 
-// This is the ONLY place a user's role can become authority_admin, officer,
-// or super_admin — never via signup (build prompt guardrail #2).
 export async function GET() {
   const user = await AuthService.getCurrentUser();
   const rbac = RbacService.requireRole(user, ["super_admin"]);
@@ -42,9 +41,11 @@ export async function POST(req: NextRequest) {
   if (role === "officer" && authorityId) {
     const existing = await OfficerRepository.findByUserId(userId);
     if (!existing) {
-      const db = await (await import("@/lib/db")).getDb();
-      db.data.officers.push({ userId, authorityId, assignedIssueIds: [] });
-      await db.write();
+      await supabaseServer.from("officers").insert({
+        user_id: userId,
+        authority_id: authorityId,
+        assigned_issue_ids: [],
+      });
     }
   }
 

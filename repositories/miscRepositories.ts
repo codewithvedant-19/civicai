@@ -1,76 +1,122 @@
-import { getDb } from "@/lib/db";
+import { supabaseServer } from "@/lib/supabase";
 import type { Officer, Settings, DamageClass, AuditLogEntry, ActiveProviders } from "@/domain/types";
 import { v4 as uuid } from "uuid";
 
 export const OfficerRepository = {
   async findByUserId(userId: string): Promise<Officer | undefined> {
-    const db = await getDb();
-    return db.data.officers.find((o) => o.userId === userId);
+    const { data } = await supabaseServer.from("officers").select("*").eq("user_id", userId).maybeSingle();
+    return data ? {
+      userId: data.user_id,
+      authorityId: data.authority_id,
+      assignedIssueIds: data.assigned_issue_ids || [],
+    } : undefined;
   },
 
   async listByAuthority(authorityId: string): Promise<Officer[]> {
-    const db = await getDb();
-    return db.data.officers.filter((o) => o.authorityId === authorityId);
+    const { data } = await supabaseServer.from("officers").select("*").eq("authority_id", authorityId);
+    return (data || []).map(o => ({
+      userId: o.user_id,
+      authorityId: o.authority_id,
+      assignedIssueIds: o.assigned_issue_ids || [],
+    }));
   },
 
   async assignIssue(userId: string, issueId: string): Promise<void> {
-    const db = await getDb();
-    const officer = db.data.officers.find((o) => o.userId === userId);
-    if (officer && !officer.assignedIssueIds.includes(issueId)) {
-      officer.assignedIssueIds.push(issueId);
-      await db.write();
+    const officer = await this.findByUserId(userId);
+    if (!officer) return;
+    
+    if (!officer.assignedIssueIds.includes(issueId)) {
+      const newIds = [...officer.assignedIssueIds, issueId];
+      await supabaseServer.from("officers").update({ assigned_issue_ids: newIds }).eq("user_id", userId);
     }
   },
 };
 
-// Config/settings repository — backs the Super Admin tunable thresholds
-// (confidence cutoff, priority bands, SLA hours, rate limits). Reading from
-// here rather than hardcoding is what makes "adjust a threshold and see it
-// take effect" (acceptance criterion #7) actually true.
 export const ConfigRepository = {
   async get(): Promise<Settings> {
-    const db = await getDb();
-    return db.data.settings;
+    const { data } = await supabaseServer.from("settings").select("data").eq("id", "global").maybeSingle();
+    if (!data) {
+      // Fallback if settings row is missing
+      return {
+        aiConfidenceThreshold: 0.55,
+        priorityThresholds: {
+          highReporterCount: 5,
+          criticalReporterCount: 10,
+          severityWeight: 1,
+          reporterWeight: 2,
+          recencyWeight: 0.5,
+        },
+        rateLimitReportsPerHour: 10,
+        slaHoursByBand: { medium: 168, high: 72, critical: 24 },
+      };
+    }
+    return data.data as Settings;
   },
 
   async update(patch: Partial<Settings>): Promise<Settings> {
-    const db = await getDb();
-    db.data.settings = { ...db.data.settings, ...patch };
-    await db.write();
-    return db.data.settings;
+    const current = await this.get();
+    const updated = { ...current, ...patch };
+    await supabaseServer.from("settings").upsert({ id: "global", data: updated });
+    return updated;
   },
 };
 
 export const DamageClassRepository = {
   async list(): Promise<DamageClass[]> {
-    const db = await getDb();
-    return db.data.damageClasses;
+    const { data } = await supabaseServer.from("damage_classes").select("*");
+    return (data || []).map(d => ({
+      id: d.id,
+      label: d.label,
+      icon: d.icon,
+      defaultSeverityWeight: d.default_severity_weight,
+      description: d.description,
+    }));
   },
 
   async findById(id: string): Promise<DamageClass | undefined> {
-    const db = await getDb();
-    return db.data.damageClasses.find((d) => d.id === id);
+    const { data } = await supabaseServer.from("damage_classes").select("*").eq("id", id).maybeSingle();
+    return data ? {
+      id: data.id,
+      label: data.label,
+      icon: data.icon,
+      defaultSeverityWeight: data.default_severity_weight,
+      description: data.description,
+    } : undefined;
   },
 };
 
 export const AuditLogRepository = {
   async log(action: string, details: string, actorId?: string): Promise<AuditLogEntry> {
-    const db = await getDb();
-    const entry: AuditLogEntry = { id: uuid(), actorId, action, details, createdAt: new Date().toISOString() };
-    db.data.auditLogs.push(entry);
-    await db.write();
-    return entry;
+    const id = uuid();
+    const { data, error } = await supabaseServer.from("audit_logs").insert({
+      id,
+      actor_id: actorId || null,
+      action,
+      details,
+    }).select().single();
+    
+    if (error) throw error;
+    return {
+      id: data.id,
+      actorId: data.actor_id || undefined,
+      action: data.action,
+      details: data.details,
+      createdAt: data.created_at,
+    };
   },
 
   async list(): Promise<AuditLogEntry[]> {
-    const db = await getDb();
-    return db.data.auditLogs.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    const { data } = await supabaseServer.from("audit_logs").select("*").order("created_at", { ascending: false });
+    return (data || []).map(d => ({
+      id: d.id,
+      actorId: d.actor_id || undefined,
+      action: d.action,
+      details: d.details,
+      createdAt: d.created_at,
+    }));
   },
 };
 
-// Read-only view of which provider is active per interface, for the
-// authority-side "Integration status panel" (Section 7) that makes the
-// modular provider setup visible/provable in the demo.
 export function getActiveProviders(): ActiveProviders {
   return {
     ai: process.env.AI_PROVIDER === "yolo" ? "YoloDamageDetectionProvider (not configured)" : "MockDamageDetectionProvider (simulated)",

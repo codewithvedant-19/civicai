@@ -3,12 +3,30 @@ import { AuthService } from "@/services/authService";
 import { RbacService } from "@/services/rbacService";
 import { IssueRepository } from "@/repositories/issueRepository";
 import { NotificationService } from "@/services/notificationService";
+import { supabaseServer } from "@/lib/supabase";
+import { v4 as uuid } from "uuid";
 
 export const runtime = "nodejs";
 
-async function fileToDataUrl(file: File): Promise<string> {
-  const buf = Buffer.from(await file.arrayBuffer());
-  return `data:${file.type};base64,${buf.toString("base64")}`;
+async function uploadToSupabase(file: File): Promise<string | null> {
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  const fileName = `repair-${Date.now()}-${uuid()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+
+  const { error } = await supabaseServer.storage
+    .from("road-reports")
+    .upload(fileName, buffer, {
+      contentType: file.type,
+      upsert: false,
+    });
+
+  if (error) {
+    console.error("Storage upload error:", error);
+    return null;
+  }
+
+  const { data } = supabaseServer.storage.from("road-reports").getPublicUrl(fileName);
+  return data.publicUrl;
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
@@ -27,8 +45,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const after = form.get("after") as File | null;
   const notes = String(form.get("notes") ?? "");
 
-  const beforePhotoUrl = before ? await fileToDataUrl(before) : issue.repairEvidence?.beforePhotoUrl;
-  const afterPhotoUrl = after ? await fileToDataUrl(after) : issue.repairEvidence?.afterPhotoUrl;
+  const beforePhotoUrl = before ? (await uploadToSupabase(before) || issue.repairEvidence?.beforePhotoUrl) : issue.repairEvidence?.beforePhotoUrl;
+  const afterPhotoUrl = after ? (await uploadToSupabase(after) || issue.repairEvidence?.afterPhotoUrl) : issue.repairEvidence?.afterPhotoUrl;
 
   const updated = await IssueRepository.update(issue.id, {
     repairEvidence: { beforePhotoUrl, afterPhotoUrl, notes, officerId: user!.id, completedAt: new Date().toISOString() },
