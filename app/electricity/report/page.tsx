@@ -6,7 +6,8 @@ import { Camera, Upload, MapPin, CheckCircle2, XCircle, Loader2 } from "lucide-r
 import Navbar from "@/components/Navbar";
 import BoundingBoxOverlay from "@/components/BoundingBoxOverlay";
 import { useCurrentUser } from "@/lib/useCurrentUser";
-import { apiGet, apiPost } from "@/lib/apiClient";
+import { apiGet } from "@/lib/apiClient";
+import { MockElectricityData, ELECTRICITY_CLASSES } from "@/lib/mockElectricityData";
 
 interface JurisdictionOption {
   id: string;
@@ -20,7 +21,7 @@ type Result =
   | { kind: "created"; issueId: string; detection: any; routedTo: string; isSimulatedRouting: boolean; previewUrl: string }
   | { kind: "merged"; issueId: string; detection: any; previewUrl: string };
 
-export default function ReportPage() {
+export default function ElectricityReportPage() {
   const { user, loading } = useCurrentUser();
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -74,37 +75,48 @@ export default function ReportPage() {
   }
 
   async function submit() {
-    if (!file || !coords) {
+    if (!file || !coords || !user) {
       setError("Add a photo and capture your location first.");
       return;
     }
     setSubmitting(true);
     setError(null);
-    try {
-      const form = new FormData();
-      form.append("image", file);
-      form.append("lat", String(coords.lat));
-      form.append("lng", String(coords.lng));
-      const data = await apiPost<any>("/api/reports", form);
-      if (data.rejected) {
-        setResult({ kind: "rejected", message: data.message, detection: data.detection, provider: data.provider, previewUrl: preview! });
-      } else if (data.merged) {
-        setResult({ kind: "merged", issueId: data.issueId, detection: data.detection, previewUrl: preview! });
-      } else {
+    
+    // Simulate API request and AI Processing
+    setTimeout(() => {
+      try {
+        const randomClass = ELECTRICITY_CLASSES[Math.floor(Math.random() * ELECTRICITY_CLASSES.length)];
+        
+        const newIssue = MockElectricityData.createIssue({
+          reporterId: user.id,
+          lat: coords.lat,
+          lng: coords.lng,
+          imageUrl: preview || "",
+          damageClassId: randomClass.id,
+          jurisdictionId: selectedCity,
+        });
+
+        const mockDetection = {
+          confidence: 0.96 + Math.random() * 0.03,
+          severity: newIssue.severity,
+          defectType: randomClass.id,
+          boundingBox: { x: 0.2, y: 0.2, width: 0.6, height: 0.6 }
+        };
+
         setResult({
           kind: "created",
-          issueId: data.issueId,
-          detection: data.detection,
-          routedTo: data.routedTo,
-          isSimulatedRouting: data.isSimulatedRouting,
+          issueId: newIssue.id,
+          detection: mockDetection,
+          routedTo: "Electricity Department",
+          isSimulatedRouting: true,
           previewUrl: preview!,
         });
+      } catch (err: any) {
+        setError(err.message || "An error occurred");
+      } finally {
+        setSubmitting(false);
       }
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setSubmitting(false);
-    }
+    }, 1500);
   }
 
   if (loading) return null;
@@ -124,9 +136,9 @@ export default function ReportPage() {
             </div>
             <div>
               <h1 className="font-display text-3xl font-black uppercase tracking-tight text-slate-950">
-                Report Road Damage
+                Report Electricity Issue
               </h1>
-              <p className="text-xs text-slate-600 font-medium">Capture or upload photo · AI verifies and routes immediately</p>
+              <p className="text-xs text-slate-600 font-medium">Capture or upload photo · AI verifies and routes to Electricity immediately</p>
             </div>
           </div>
         </div>
@@ -145,7 +157,7 @@ export default function ReportPage() {
                       <Camera size={36} />
                     </div>
                     <p className="text-sm font-semibold text-slate-700">No damage photo selected</p>
-                    <p className="text-xs text-slate-500 max-w-xs">Upload a clear photo of road damage (pothole, crack, debris, erosion)</p>
+                    <p className="text-xs text-slate-500 max-w-xs">Upload a clear photo of the Electricity issue (garbage accumulation, illegal dumping, blocked drains)</p>
                   </div>
                 )}
                 <input
@@ -237,7 +249,7 @@ export default function ReportPage() {
                     </h2>
                   </div>
                   <p className="text-xs text-slate-600 font-medium mb-4">
-                    Confidence {(result.detection.confidence * 100).toFixed(0)}% · Severity {result.detection.severity} · Defect: {result.detection.defectType}
+                    Confidence {(result.detection.confidence * 100).toFixed(0)}% · Severity {result.detection.severity} · Category: {result.detection.defectType}
                   </p>
                   {result.kind === "created" && (
                     <p className="mb-4 font-mono text-xs text-blue-700 font-semibold bg-blue-50 p-2 rounded-lg border border-blue-100">
@@ -246,11 +258,11 @@ export default function ReportPage() {
                   )}
                   <BoundingBoxOverlay imageUrl={result.previewUrl} box={result.detection.boundingBox} label={result.detection.defectType} />
                   <div className="mt-5 flex gap-3">
-                    <button onClick={() => router.push(`/issues/${result.issueId}`)} className="rounded-xl bg-[#FFC000] hover:bg-[#EBB000] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-950 shadow-sm">
+                    <button onClick={() => router.push(`/Electricity/issues/${result.issueId}`)} className="rounded-xl bg-[#FFC000] hover:bg-[#EBB000] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-950 shadow-sm">
                       View Issue Status
                     </button>
-                    <button onClick={() => router.push("/dashboard")} className="rounded-xl bg-slate-100 hover:bg-slate-200 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900">
-                      My Dashboard
+                    <button onClick={() => router.push("/Electricity/dashboard")} className="rounded-xl bg-slate-100 hover:bg-slate-200 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900">
+                      Electricity Dashboard
                     </button>
                   </div>
                 </div>

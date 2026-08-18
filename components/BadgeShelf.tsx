@@ -21,12 +21,16 @@ export default function BadgeShelf({ allBadges, earnedIds }: { allBadges: Badge[
             key={b.id}
             title={b.description}
             className={clsx(
-              "flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition",
-              earned ? "border-amber/40 bg-amber/10" : "border-asphalt-line bg-asphalt-surface opacity-40"
+              "flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition-all shadow-sm",
+              earned
+                ? "border-amber-400 bg-amber-50/80 text-slate-900 font-medium"
+                : "border-slate-200 bg-slate-50/50 opacity-50 text-slate-400"
             )}
           >
-            <Icon size={26} className={earned ? "text-amber" : "text-ink-faint"} />
-            <span className="text-xs font-medium text-ink">{b.label}</span>
+            <div className={clsx("p-2 rounded-full", earned ? "bg-amber-100 text-amber-700" : "bg-slate-200 text-slate-400")}>
+              <Icon size={24} />
+            </div>
+            <span className="text-xs font-semibold">{b.label}</span>
           </div>
         );
       })}

@@ -40,6 +40,11 @@ export default function MapView({ markers, center, zoom = 12 }: { markers: MapMa
 
   useEffect(() => {
     if (!mapRef.current) return;
+    mapRef.current.flyTo({ center: [center[1], center[0]], zoom });
+  }, [center[0], center[1], zoom]);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
     markerRefs.current.forEach((m) => m.remove());
     markerRefs.current = markers.map((m) => {
       const el = document.createElement("div");

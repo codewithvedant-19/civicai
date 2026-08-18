@@ -7,16 +7,19 @@ import { PriorityBadge, SeverityDot, StatusPill } from "@/components/Badges";
 import BoundingBoxOverlay from "@/components/BoundingBoxOverlay";
 import RoadProgress from "@/components/RoadProgress";
 import { useCurrentUser } from "@/lib/useCurrentUser";
-import { apiGet, apiPost } from "@/lib/apiClient";
+import { MockElectricityData, ELECTRICITY_CLASSES } from "@/lib/mockElectricityData";
 import type { Issue } from "@/domain/types";
 
-export default function IssueDetailPage() {
+export default function ElectricityIssueDetailPage() {
   const params = useParams<{ id: string }>();
   const { user } = useCurrentUser();
   const [issue, setIssue] = useState<Issue | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
-  const load = () => apiGet<{ issue: Issue }>(`/api/issues/${params.id}`).then((d) => setIssue(d.issue)).catch(() => {});
+  const load = () => {
+    const found = MockElectricityData.getIssue(params.id);
+    if (found) setIssue(found);
+  };
 
   useEffect(() => {
     load();
@@ -29,18 +32,26 @@ export default function IssueDetailPage() {
       <div className="min-h-screen bg-[#E7ECF0]">
         <Navbar user={user} />
         <div className="flex justify-center items-center py-20">
-          <div className="font-mono text-sm text-slate-600">Loading issue details...</div>
+          <div className="font-mono text-sm text-slate-600">Loading Electricity issue details...</div>
         </div>
       </div>
     );
   }
 
   const isReporter = user?.id === issue.reporterId;
-  const canConfirm = user?.role === "citizen" && !isReporter && !issue.confirmations.some((c) => c.userId === user.id);
+  const canConfirm = user?.role === "citizen" && !isReporter && !issue.confirmations.some((c) => c.userId === user?.id);
 
-  async function confirm() {
+  // MOCK: simulate confirmation
+  function confirm() {
+    if (!user || !issue) return;
     try {
-      await apiPost(`/api/issues/${issue!.id}/confirm`);
+      const all = MockElectricityData.getIssues();
+      const idx = all.findIndex(i => i.id === issue.id);
+      if (idx !== -1) {
+        all[idx].confirmations.push({ userId: user.id, createdAt: new Date().toISOString() });
+        all[idx].priorityScore += 10;
+        localStorage.setItem("civic_Electricity_issues", JSON.stringify(all));
+      }
       setMsg("Confirmed! Issue priority increased.");
       load();
     } catch (e: any) {
@@ -48,15 +59,24 @@ export default function IssueDetailPage() {
     }
   }
 
-  async function reopen() {
+  // MOCK: simulate reopen
+  function reopen() {
+    if (!issue) return;
     try {
-      await apiPost(`/api/issues/${issue!.id}/reopen`);
+      const all = MockElectricityData.getIssues();
+      const idx = all.findIndex(i => i.id === issue.id);
+      if (idx !== -1) {
+        all[idx].status = "reopened";
+        localStorage.setItem("civic_Electricity_issues", JSON.stringify(all));
+      }
       setMsg("Flagged as still unresolved.");
       load();
     } catch (e: any) {
       setMsg(e.message);
     }
   }
+
+  const damageClassLabel = ELECTRICITY_CLASSES.find(c => c.id === issue.damageClassId)?.label || issue.damageClassId.replace(/_/g, " ");
 
   return (
     <div className="min-h-screen bg-[#E7ECF0] blueprint-bg text-slate-900">
@@ -66,7 +86,7 @@ export default function IssueDetailPage() {
           <div className="mb-4 flex flex-wrap items-center gap-2.5">
             <SeverityDot severity={issue.severity} />
             <h1 className="font-display text-3xl font-black uppercase tracking-tight text-slate-950 capitalize">
-              {issue.damageClassId.replace(/_/g, " ")}
+              {damageClassLabel}
             </h1>
             <PriorityBadge band={issue.priorityBand} />
             <StatusPill status={issue.status} />
@@ -78,7 +98,7 @@ export default function IssueDetailPage() {
           </div>
           
           {issue.routedTo && (
-            <div className="mt-2 flex items-center gap-2 font-mono text-xs text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 w-fit">
+            <div className="mt-2 flex items-center gap-2 font-mono text-xs text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 w-fit">
               <Building2 size={14} />
               <span>Routed to: {issue.routedTo}{issue.isSimulatedRouting ? " (simulated department)" : ""}</span>
             </div>
@@ -90,7 +110,7 @@ export default function IssueDetailPage() {
             <BoundingBoxOverlay imageUrl={issue.imageUrl} box={issue.boundingBox} label={`${(issue.aiConfidence * 100).toFixed(0)}% confidence`} />
           </div>
 
-          {/* Lifecycle pipeline */}
+          {/* Lifecycle pipeline - Re-using RoadProgress as the workflow is identical */}
           <div className="mt-8 pt-6 border-t border-slate-100">
             <h2 className="mb-3 font-mono text-xs font-bold uppercase tracking-wider text-slate-500">Lifecycle Progress</h2>
             <RoadProgress status={issue.status} />
@@ -123,32 +143,6 @@ export default function IssueDetailPage() {
             )}
           </div>
         </div>
-
-        {/* Repair evidence */}
-        {issue.repairEvidence && (issue.repairEvidence.beforePhotoUrl || issue.repairEvidence.afterPhotoUrl) && (
-          <div className="bg-white p-6 rounded-2xl border border-[#CBD5E1] shadow-sm">
-            <h2 className="mb-4 font-display text-xl font-bold uppercase tracking-tight text-slate-950">Repair Verification Evidence</h2>
-            <div className="grid grid-cols-2 gap-4">
-              {issue.repairEvidence.beforePhotoUrl && (
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <p className="mb-2 font-mono text-xs font-bold uppercase text-slate-600">Before Repair</p>
-                  <img src={issue.repairEvidence.beforePhotoUrl} alt="Before" className="rounded-lg max-h-60 object-contain w-full" />
-                </div>
-              )}
-              {issue.repairEvidence.afterPhotoUrl && (
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <p className="mb-2 font-mono text-xs font-bold uppercase text-slate-600">After Repair</p>
-                  <img src={issue.repairEvidence.afterPhotoUrl} alt="After" className="rounded-lg max-h-60 object-contain w-full" />
-                </div>
-              )}
-            </div>
-            {issue.repairEvidence.notes && (
-              <p className="mt-3 text-xs text-slate-600 font-medium bg-slate-50 p-3 rounded-lg border border-slate-200">
-                Notes: {issue.repairEvidence.notes}
-              </p>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, PieChart, Pie, Cell } from "recharts";
+import { Building2, AlertOctagon, Upload, CheckCircle2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import IssueCard from "@/components/IssueCard";
 import MapView, { MapMarker } from "@/components/MapView";
@@ -9,7 +10,7 @@ import { useCurrentUser } from "@/lib/useCurrentUser";
 import { apiGet, apiPost } from "@/lib/apiClient";
 import type { Issue, DamageClass } from "@/domain/types";
 
-const COLOR: Record<string, string> = { low: "#2FB8A6", medium: "#F5A623", high: "#F97316", critical: "#E14F4F" };
+const COLOR: Record<string, string> = { low: "#2563EB", medium: "#FFC000", high: "#F97316", critical: "#DC2626" };
 
 export default function AuthorityDashboard() {
   const { user, loading } = useCurrentUser();
@@ -18,6 +19,7 @@ export default function AuthorityDashboard() {
   const [damageClasses, setDamageClasses] = useState<DamageClass[]>([]);
   const [officers, setOfficers] = useState<{ userId: string; name: string; assignedCount: number }[]>([]);
   const [view, setView] = useState<"queue" | "map" | "analytics">("queue");
+  const [userLoc, setUserLoc] = useState<[number, number] | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -25,9 +27,12 @@ export default function AuthorityDashboard() {
   }, [user]);
 
   function load() {
-    apiGet<{ issues: Issue[] }>(`/api/issues?authorityId=${user!.authorityId ?? ""}`).then((d) => setIssues(d.issues));
-    apiGet<{ damageClasses: DamageClass[] }>("/api/public/stats").then((d) => setDamageClasses(d.damageClasses));
-    apiGet<{ officers: any[] }>("/api/authority/officers").then((d) => setOfficers(d.officers));
+    apiGet<{ issues: Issue[] }>(`/api/issues?authorityId=${user!.authorityId ?? ""}`).then((d) => setIssues(d.issues)).catch(() => {});
+    apiGet<{ damageClasses: DamageClass[] }>("/api/public/stats").then((d) => setDamageClasses(d.damageClasses)).catch(() => {});
+    apiGet<{ officers: any[] }>("/api/authority/officers").then((d) => setOfficers(d.officers)).catch(() => {});
+    if (navigator.geolocation && !userLoc) {
+      navigator.geolocation.getCurrentPosition((pos) => setUserLoc([pos.coords.latitude, pos.coords.longitude]), () => {});
+    }
   }
 
   async function assign(issueId: string, officerId: string) {
@@ -62,52 +67,68 @@ export default function AuthorityDashboard() {
     id: i.id,
     lat: i.lat,
     lng: i.lng,
-    color: COLOR[i.severity] ?? "#8B93A1",
+    color: COLOR[i.severity] ?? "#64748B",
     popupHtml: `<b>${i.damageClassId}</b><br/>${i.address}<br/>${i.status}`,
   }));
 
   return (
-    <div>
+    <div className="min-h-screen bg-[#E7ECF0] blueprint-bg text-slate-900">
       <Navbar user={user} />
-      <div className="mx-auto max-w-6xl px-4 py-8">
-        <h1 className="font-display text-2xl font-semibold text-ink">Authority Dashboard</h1>
-        <p className="text-sm text-ink-muted">Logged in as {user.role.replace("_", " ")} — {user.name}</p>
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/80 backdrop-blur-sm p-6 rounded-2xl border border-[#CBD5E1] shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-[#FFC000] text-slate-950 rounded-xl shadow-sm">
+              <Building2 size={26} />
+            </div>
+            <div>
+              <h1 className="font-display text-3xl font-black uppercase tracking-tight text-slate-950">Authority Portal</h1>
+              <p className="text-xs text-slate-600 font-medium">Logged in as {user.role.replace(/_/g, " ")} — {user.name}</p>
+            </div>
+          </div>
+
+          <div className="flex bg-slate-200/80 p-1 rounded-xl border border-slate-300">
+            {(["queue", "map", "analytics"] as const).map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`rounded-lg px-4 py-1.5 text-xs font-mono font-bold uppercase transition-all ${
+                  view === v ? "bg-white text-slate-950 shadow-sm" : "text-slate-600 hover:text-slate-950"
+                }`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {critical.length > 0 && (
-          <div className="mt-4 rounded-xl border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
-            🚨 {critical.length} issue{critical.length > 1 ? "s" : ""} at Critical priority requiring immediate attention.
+          <div className="mb-6 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-bold text-red-700 shadow-sm">
+            <AlertOctagon size={20} className="text-red-600 shrink-0" />
+            <span>{critical.length} critical issue{critical.length > 1 ? "s" : ""} requiring urgent municipal dispatch.</span>
           </div>
         )}
 
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat label="Total" value={issues.length} />
-          <Stat label="Active" value={active.length} />
-          <Stat label="Critical" value={critical.length} />
-          <Stat label="Resolved" value={resolved.length} />
-        </div>
-
-        <div className="mt-6 flex gap-2">
-          {(["queue", "map", "analytics"] as const).map((v) => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className={`rounded-full border px-3 py-1 text-xs capitalize ${view === v ? "border-amber bg-amber/10 text-amber" : "border-asphalt-line text-ink-muted"}`}
-            >
-              {v}
-            </button>
-          ))}
+        <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Stat label="Total Complaints" value={issues.length} />
+          <Stat label="Active Queue" value={active.length} highlight="text-blue-700" />
+          <Stat label="Critical Band" value={critical.length} highlight="text-red-600" />
+          <Stat label="Resolved Repaired" value={resolved.length} highlight="text-emerald-700" />
         </div>
 
         {view === "queue" && (
-          <div className="mt-5 space-y-3">
-            {sorted.length === 0 && <p className="text-sm text-ink-muted">No issues yet.</p>}
+          <div className="space-y-4">
+            {sorted.length === 0 && <p className="text-xs text-slate-500 bg-white p-6 rounded-2xl border border-slate-200">No issues in the dispatch queue.</p>}
             {sorted.map((issue) => (
               <div key={issue.id} className="space-y-2">
                 <IssueCard issue={issue} damageClass={damageClasses.find((d) => d.id === issue.damageClassId)} href={`/issues/${issue.id}`} />
                 {user.role !== "officer" && officers.length > 0 && !issue.assignedOfficerId && (
                   <div className="flex flex-wrap gap-2 pl-2">
                     {officers.map((o) => (
-                      <button key={o.userId} onClick={() => assign(issue.id, o.userId)} className="rounded-full border border-asphalt-line px-3 py-1 text-xs text-ink-muted hover:border-teal/50 hover:text-teal">
+                      <button
+                        key={o.userId}
+                        onClick={() => assign(issue.id, o.userId)}
+                        className="rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-400"
+                      >
                         Assign to {o.name}
                       </button>
                     ))}
@@ -127,34 +148,34 @@ export default function AuthorityDashboard() {
         )}
 
         {view === "map" && (
-          <div className="mt-5 h-[500px]">
-            <MapView markers={markers} center={markers[0] ? [markers[0].lat, markers[0].lng] : [39.78, -89.65]} />
+          <div className="h-[520px] rounded-2xl overflow-hidden border border-[#CBD5E1] shadow-sm bg-white">
+            <MapView markers={markers} center={userLoc || (markers[0] ? [markers[0].lat, markers[0].lng] : [39.78, -89.65])} />
           </div>
         )}
 
         {view === "analytics" && (
-          <div className="mt-5 grid gap-6 md:grid-cols-2">
-            <div className="rounded-xl border border-asphalt-line bg-asphalt-surface p-4">
-              <h3 className="mb-3 text-sm font-medium text-ink-muted">Severity distribution</h3>
-              <ResponsiveContainer width="100%" height={220}>
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="rounded-2xl border border-[#CBD5E1] bg-white p-6 shadow-sm">
+              <h3 className="mb-4 font-display text-xl font-bold uppercase tracking-tight text-slate-950">Severity Distribution</h3>
+              <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={severityData}>
-                  <XAxis dataKey="name" stroke="#8B93A1" fontSize={12} />
-                  <YAxis stroke="#8B93A1" fontSize={12} allowDecimals={false} />
-                  <Tooltip contentStyle={{ background: "#1B1F27", border: "1px solid #262B35" }} />
-                  <Bar dataKey="count" fill="#F5A623" radius={[4, 4, 0, 0]} />
+                  <XAxis dataKey="name" stroke="#64748B" fontSize={12} />
+                  <YAxis stroke="#64748B" fontSize={12} allowDecimals={false} />
+                  <Tooltip contentStyle={{ background: "#FFFFFF", border: "1px solid #CBD5E1", borderRadius: "8px" }} />
+                  <Bar dataKey="count" fill="#FFC000" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div className="rounded-xl border border-asphalt-line bg-asphalt-surface p-4">
-              <h3 className="mb-3 text-sm font-medium text-ink-muted">Priority bands</h3>
-              <ResponsiveContainer width="100%" height={220}>
+            <div className="rounded-2xl border border-[#CBD5E1] bg-white p-6 shadow-sm">
+              <h3 className="mb-4 font-display text-xl font-bold uppercase tracking-tight text-slate-950">Priority Bands</h3>
+              <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
-                  <Pie data={bandData} dataKey="value" nameKey="name" outerRadius={80}>
+                  <Pie data={bandData} dataKey="value" nameKey="name" outerRadius={85}>
                     {bandData.map((d) => (
                       <Cell key={d.name} fill={COLOR[d.name]} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ background: "#1B1F27", border: "1px solid #262B35" }} />
+                  <Tooltip contentStyle={{ background: "#FFFFFF", border: "1px solid #CBD5E1", borderRadius: "8px" }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -165,11 +186,11 @@ export default function AuthorityDashboard() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({ label, value, highlight }: { label: string; value: number; highlight?: string }) {
   return (
-    <div className="rounded-xl border border-asphalt-line bg-asphalt-surface p-4 text-center">
-      <div className="font-mono text-2xl font-semibold text-ink">{value}</div>
-      <div className="text-xs text-ink-muted">{label}</div>
+    <div className="rounded-2xl border border-[#CBD5E1] bg-white p-5 shadow-sm text-center">
+      <div className={`font-mono text-3xl font-black ${highlight ?? "text-slate-950"}`}>{value}</div>
+      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-tight mt-1">{label}</div>
     </div>
   );
 }
@@ -187,8 +208,11 @@ function NextStatusButtons({ issue, onAdvance }: { issue: Issue; onAdvance: (id:
   const next = NEXT_STATUS[issue.status];
   if (!next) return null;
   return (
-    <button onClick={() => onAdvance(issue.id, next)} className="rounded-full bg-teal/15 px-3 py-1 text-xs text-teal hover:bg-teal/25">
-      Move to {next.replace(/_/g, " ")}
+    <button
+      onClick={() => onAdvance(issue.id, next)}
+      className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-1 text-xs font-bold uppercase text-blue-700 hover:bg-blue-100"
+    >
+      Advance to {next.replace(/_/g, " ")}
     </button>
   );
 }
@@ -204,12 +228,12 @@ function RepairUploadButton({ issueId, onDone }: { issueId: string; onDone: () =
   }
   return (
     <div className="flex gap-2">
-      <label className="cursor-pointer rounded-full border border-asphalt-line px-3 py-1 text-xs text-ink-muted hover:text-amber">
-        Upload before photo
+      <label className="cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+        Upload Before Photo
         <input type="file" accept="image/*" className="hidden" onChange={(e) => upload(e, "before")} />
       </label>
-      <label className="cursor-pointer rounded-full border border-asphalt-line px-3 py-1 text-xs text-ink-muted hover:text-amber">
-        Upload after photo
+      <label className="cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+        Upload After Photo
         <input type="file" accept="image/*" className="hidden" onChange={(e) => upload(e, "after")} />
       </label>
     </div>

@@ -21,17 +21,17 @@ export default function XPBar({
   return (
     <div>
       <div className="mb-1.5 flex items-baseline justify-between">
-        <span className="font-display text-lg font-semibold text-ink">{rankName}</span>
-        <span className="font-mono text-xs text-ink-muted">
+        <span className="font-display text-lg font-bold text-slate-950 uppercase tracking-tight">{rankName}</span>
+        <span className="font-mono text-xs font-medium text-slate-600">
           {points} pts{nextRankName ? ` · ${nextMinPoints! - points} to ${nextRankName}` : " · Max rank"}
         </span>
       </div>
-      <div className="h-2.5 w-full overflow-hidden rounded-full bg-asphalt-surface">
+      <div className="h-3 w-full overflow-hidden rounded-full bg-slate-200 shadow-inner">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="h-full rounded-full bg-gradient-to-r from-teal to-amber"
+          className="h-full rounded-full bg-gradient-to-r from-blue-600 via-amber-400 to-[#FFC000]"
         />
       </div>
     </div>

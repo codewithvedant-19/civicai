@@ -1,261 +1,375 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { Camera, ArrowRight, Map, ShieldCheck, Sparkles, MapPin, Wrench, Gift, Users2, Zap, Trophy, CheckCircle2, Circle } from "lucide-react";
+import {
+  Camera,
+  MapPin,
+  Users,
+  Building2,
+  Wrench,
+  Gift,
+  ArrowUpRight,
+  Globe,
+  Sparkles,
+  ShieldCheck,
+  Zap,
+  CheckCircle2,
+  Trash2,
+  Droplet,
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 
 export default function HomePage() {
   const { user } = useCurrentUser();
 
+  const steps = [
+    {
+      num: "01",
+      title: "CITIZEN",
+      desc: "You report a road issue",
+      icon: (
+        <Camera className="w-5 h-5 text-[#1E3A8A] stroke-[2.2]" />
+      ),
+    },
+    {
+      num: "02",
+      title: "AI VERIFICATION",
+      desc: "AI verifies the issue",
+      icon: (
+        <div className="flex items-center justify-center font-mono text-[#1E3A8A] font-extrabold text-[12px] tracking-tighter">
+          <span className="text-sm font-light mr-0.5">[</span>
+          <span>AI</span>
+          <span className="text-sm font-light ml-0.5">]</span>
+        </div>
+      ),
+    },
+    {
+      num: "03",
+      title: "LOCATION",
+      desc: "Location is captured",
+      icon: (
+        <MapPin className="w-5 h-5 text-[#1E3A8A] stroke-[2.2]" />
+      ),
+    },
+    {
+      num: "04",
+      title: "COMMUNITY",
+      desc: "Neighbors upvote",
+      icon: (
+        <Users className="w-5 h-5 text-[#1E3A8A] stroke-[2.2]" />
+      ),
+    },
+    {
+      num: "05",
+      title: "AUTHORITY",
+      desc: "Sent to right department",
+      icon: (
+        <Building2 className="w-5 h-5 text-[#1E3A8A] stroke-[2.2]" />
+      ),
+    },
+    {
+      num: "06",
+      title: "REPAIR",
+      desc: "Issue is resolved",
+      icon: (
+        <Wrench className="w-5 h-5 text-[#1E3A8A] stroke-[2.2]" />
+      ),
+    },
+    {
+      num: "07",
+      title: "REWARD",
+      desc: "You earn points",
+      icon: (
+        <Gift className="w-5 h-5 text-[#1E3A8A] stroke-[2.2]" />
+      ),
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#0a0d14] text-white">
+    <div className="min-h-screen bg-[#E7ECF0] text-slate-900 flex flex-col font-body blueprint-bg selection:bg-[#FFC000] selection:text-black">
+      {/* Top Navigation */}
       <Navbar user={user} />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-12 pb-16 md:pt-24 md:pb-32 px-6">
-        <div className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div className="relative w-full min-h-[700px] flex flex-col justify-between overflow-hidden border-b border-[#CBD5E1]">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/images/city-bg.jpg"
+            alt="City Background"
+            fill
+            className="object-cover object-bottom"
+            priority
+          />
+          {/* Soft gradient overlay for text readability on left */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-transparent z-10" />
+        </div>
+
+        {/* Hero Content */}
+        <div className="relative z-20 flex-1 w-full max-w-[1600px] mx-auto px-6 sm:px-10 lg:px-16 py-12 lg:py-20 flex flex-col xl:flex-row items-center justify-between gap-10">
           
           {/* Left Column */}
-          <div className="z-10">
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber/30 bg-amber/5 px-3 py-1 mb-8">
-              <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-amber font-semibold">
-                AI-Powered • Community Driven
+          <div className="flex-1 max-w-xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm mb-6">
+              <Sparkles className="w-4 h-4 text-[#FFC000]" />
+              <span className="font-mono text-[10px] font-extrabold uppercase tracking-widest text-slate-800">
+                AI-POWERED CIVIC PLATFORM
               </span>
             </div>
-            
-            <h1 className="font-display text-5xl sm:text-6xl md:text-7xl font-bold leading-[1.1] tracking-tight text-white mb-6">
-              See a road problem.<br />
-              <span className="text-amber">Report it.</span> Get it fixed.
+
+            <h1 className="font-display font-black text-5xl sm:text-6xl md:text-[80px] leading-[1.05] tracking-tight text-slate-900 mb-6">
+              See a Problem.<br />
+              <span className="text-[#FFC000]">Report It.</span><br />
+              Get It Fixed.
             </h1>
-            
-            <p className="max-w-xl text-lg sm:text-xl text-ink-muted mb-10 leading-relaxed">
-              CivicRoad AI uses smart verification to ensure every report reaches the right authority and gets things moving.
+
+            <p className="font-body text-slate-700 text-base md:text-lg max-w-lg leading-relaxed mb-10">
+              From potholes to garbage piled up on the street — report civic issues, track progress, and help build a cleaner, safer city for everyone.
             </p>
-            
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-12">
-              <Link href="/report" className="flex items-center justify-center gap-2 rounded-xl bg-amber px-6 py-4 font-display text-[15px] font-bold text-asphalt hover:bg-amber/90 transition-colors w-full sm:w-auto">
-                <Camera size={18} />
-                Report a Road Issue
-                <ArrowRight size={18} className="ml-1" />
-              </Link>
-              <Link href="/map" className="flex items-center justify-center gap-2 rounded-xl border border-asphalt-line bg-transparent px-6 py-4 font-display text-[15px] font-semibold text-white hover:bg-asphalt-surface transition-colors w-full sm:w-auto">
-                <Map size={18} />
-                Explore Live Map
-              </Link>
-            </div>
-            
-            <div className="flex flex-wrap items-center gap-4 text-sm text-ink-muted font-medium">
-              <div className="flex items-center gap-3 pr-4 border-r border-asphalt-line">
-                <div className="flex -space-x-2">
-                  <div className="h-8 w-8 rounded-full border-2 border-[#0a0d14] bg-gray-600"></div>
-                  <div className="h-8 w-8 rounded-full border-2 border-[#0a0d14] bg-gray-500"></div>
-                  <div className="h-8 w-8 rounded-full border-2 border-[#0a0d14] bg-gray-400"></div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Link href="/report" className="flex items-center justify-between bg-[#FFC000] hover:bg-[#EBB000] text-slate-950 font-bold uppercase tracking-wider text-[11px] sm:text-xs px-5 py-3.5 rounded-xl shadow-sm transition-all hover:scale-[1.02]">
+                <div className="flex items-center gap-2.5">
+                  <Wrench className="w-4 h-4" />
+                  <span>REPORT ROAD ISSUE</span>
                 </div>
-                <span>Trusted by 25,000+ citizens</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-green-500">
-                <CheckCircle2 size={16} />
-                <span className="text-ink-muted">AI Verified</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-green-500 border-l border-asphalt-line pl-4">
-                <ShieldCheck size={16} />
-                <span className="text-ink-muted">Secure & Private</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Visual */}
-          <div className="relative w-full aspect-square md:aspect-[4/3] lg:aspect-square flex items-center justify-center">
-            {/* The Image with Targeting overlay */}
-            <div className="absolute inset-0 z-0">
-              <div className="absolute inset-0 bg-gradient-to-r from-[#0a0d14] via-transparent to-transparent z-10 lg:block hidden"></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0d14] via-transparent to-[#0a0d14]/40 z-10"></div>
-              <Image 
-                src="/hero-pothole.jpg" 
-                alt="Pothole at night" 
-                fill
-                className="object-cover rounded-2xl opacity-60"
-                priority
-              />
-              {/* Yellow Targeting Bracket - Top Left */}
-              <div className="absolute top-[20%] left-[20%] w-16 h-16 border-t-2 border-l-2 border-amber z-10 rounded-tl-lg"></div>
-              {/* Yellow Targeting Bracket - Bottom Right */}
-              <div className="absolute bottom-[20%] right-[20%] w-16 h-16 border-b-2 border-r-2 border-amber z-10 rounded-br-lg"></div>
-            </div>
-
-            {/* Floating Card */}
-            <div className="relative z-20 bg-[#161a22]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl w-full max-w-[340px] ml-auto lg:-mr-12">
-              <div className="flex items-center gap-2 mb-5">
-                <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
-                <span className="text-sm font-medium text-white">AI Verification in progress</span>
-              </div>
+                <ArrowUpRight className="w-4 h-4 opacity-50" />
+              </Link>
               
-              <div className="flex gap-4 mb-6 bg-[#0f1218] p-3 rounded-xl border border-white/5">
-                <div className="h-14 w-14 rounded-lg bg-gray-800 relative overflow-hidden flex-shrink-0">
-                  <Image src="/hero-pothole.jpg" alt="thumbnail" fill className="object-cover" />
+              <Link href="/sanitation/report" className="flex items-center justify-between bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase tracking-wider text-[11px] sm:text-xs px-5 py-3.5 rounded-xl shadow-sm transition-all hover:scale-[1.02]">
+                <div className="flex items-center gap-2.5">
+                  <Trash2 className="w-4 h-4" />
+                  <span>REPORT SANITATION ISSUE</span>
                 </div>
-                <div className="flex flex-col justify-center">
-                  <h4 className="text-xs text-white font-medium mb-1">Pothole on 5th Avenue<br/>Sector 12, Downtown</h4>
-                  <span className="text-[10px] text-[#ff5f5f] border border-[#ff5f5f]/30 bg-[#ff5f5f]/10 rounded px-2 py-0.5 w-fit">High Priority</span>
-                </div>
-              </div>
+                <ArrowUpRight className="w-4 h-4 opacity-50" />
+              </Link>
 
-              <div className="space-y-4 mb-6">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 text-white">
-                    <CheckCircle2 size={16} className="text-green-500 fill-green-500/20" />
-                    <span>Image captured</span>
-                  </div>
-                  <span className="text-ink-muted">2:45 PM</span>
+              <Link href="/electricity/report" className="flex items-center justify-between bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase tracking-wider text-[11px] sm:text-xs px-5 py-3.5 rounded-xl shadow-sm transition-all hover:scale-[1.02]">
+                <div className="flex items-center gap-2.5">
+                  <Zap className="w-4 h-4" />
+                  <span>REPORT ELECTRICITY ISSUE</span>
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 text-white">
-                    <CheckCircle2 size={16} className="text-green-500 fill-green-500/20" />
-                    <span>AI damage verification</span>
-                  </div>
-                  <span className="text-ink-muted">2:45 PM</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 text-white">
-                    <CheckCircle2 size={16} className="text-green-500 fill-green-500/20" />
-                    <span>Location matched</span>
-                  </div>
-                  <span className="text-ink-muted">2:46 PM</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 text-white">
-                    <Circle size={16} className="text-ink-muted" />
-                    <span className="text-ink-muted">Routed to authority</span>
-                  </div>
-                  <span className="text-ink-faint">Pending</span>
-                </div>
-              </div>
+                <ArrowUpRight className="w-4 h-4 opacity-50" />
+              </Link>
 
-              <div className="pt-4 border-t border-white/10 text-xs text-ink-muted">
-                Estimated resolution: 3-5 days
+              <Link href="/drainage/report" className="flex items-center justify-between bg-teal-600 hover:bg-teal-500 text-white font-bold uppercase tracking-wider text-[11px] sm:text-xs px-5 py-3.5 rounded-xl shadow-sm transition-all hover:scale-[1.02]">
+                <div className="flex items-center gap-2.5">
+                  <Droplet className="w-4 h-4" />
+                  <span>REPORT DRAINAGE ISSUE</span>
+                </div>
+                <ArrowUpRight className="w-4 h-4 opacity-50" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Center Badge (Hidden on mobile) */}
+          <div className="hidden 2xl:flex items-center justify-center relative w-48 h-48 mx-4 shrink-0">
+            <div className="absolute inset-0 rounded-full border border-dashed border-emerald-400/50 animate-[spin_20s_linear_infinite]" />
+            <div className="absolute inset-2 rounded-full border border-emerald-400/30" />
+            <div className="w-32 h-32 bg-white rounded-full shadow-xl flex flex-col items-center justify-center p-4 text-center z-10 border border-slate-100">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-800 mb-1">CIVIC AI</span>
+              <Building2 className="w-8 h-8 text-emerald-600 mb-1" />
+              <span className="text-[9px] font-semibold text-slate-500 uppercase">Better City, Together</span>
+            </div>
+            {/* Connecting lines illustration */}
+            <svg className="absolute left-full top-1/2 -translate-y-1/2 w-32 h-64 -z-10" viewBox="0 0 100 200" fill="none">
+              <path d="M0,100 C50,100 50,20 100,20" stroke="rgba(16,185,129,0.3)" strokeWidth="1" strokeDasharray="4 4" />
+              <path d="M0,100 C50,100 50,180 100,180" stroke="rgba(16,185,129,0.3)" strokeWidth="1" strokeDasharray="4 4" />
+            </svg>
+          </div>
+
+          {/* Right Column: 4 Images Grid (Restored) */}
+          <div className="w-full xl:w-[600px] shrink-0 relative flex items-center justify-center p-4">
+            <div className="relative w-full max-w-lg lg:max-w-xl aspect-[16/16] sm:aspect-[16/14] flex items-center justify-center group z-10">
+              <div className="grid grid-cols-2 grid-rows-2 gap-3 w-full h-full bg-white/40 p-3 rounded-3xl backdrop-blur-sm border border-white/50 shadow-2xl">
+                <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-md">
+                  <Image
+                    src="/images/hero-3d.jpg"
+                    alt="Civic AI - Roads"
+                    fill
+                    priority
+                    className="object-cover hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+                <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-md">
+                  <Image
+                    src="/images/sanitation-3d.jpg"
+                    alt="Civic AI - Sanitation"
+                    fill
+                    priority
+                    className="object-cover hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+                <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-md group/img">
+                  <img
+                    src="/images/elec-drainage.jpg"
+                    alt="Civic AI - Electricity"
+                    className="absolute top-0 left-0 w-[200%] max-w-none h-full object-cover group-hover/img:scale-105 transition-transform duration-500 origin-left"
+                  />
+                </div>
+                <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-md group/img">
+                  <img
+                    src="/images/elec-drainage.jpg"
+                    alt="Civic AI - Drainage"
+                    className="absolute top-0 right-0 w-[200%] max-w-none h-full object-cover group-hover/img:scale-105 transition-transform duration-500 origin-right"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Features Row */}
-      <section className="border-y border-asphalt-line bg-[#0d1017]">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="grid grid-cols-2 md:grid-cols-5 divide-x divide-y md:divide-y-0 divide-asphalt-line">
-            
-            <div className="p-6 md:p-8 flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-amber/20 bg-amber/5 text-amber shrink-0">
-                <Camera size={20} />
-              </div>
-              <div>
-                <h3 className="text-white font-medium text-[15px] mb-1">Capture</h3>
-                <p className="text-xs text-ink-muted">Take a photo of the road issue</p>
-              </div>
-            </div>
-            
-            <div className="p-6 md:p-8 flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-amber/20 bg-amber/5 text-amber shrink-0">
-                <Sparkles size={20} />
-              </div>
-              <div>
-                <h3 className="text-white font-medium text-[15px] mb-1">AI Verifies</h3>
-                <p className="text-xs text-ink-muted">Our AI checks and validates it</p>
-              </div>
-            </div>
-
-            <div className="p-6 md:p-8 flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-teal/20 bg-teal/5 text-teal shrink-0">
-                <MapPin size={20} />
-              </div>
-              <div>
-                <h3 className="text-white font-medium text-[15px] mb-1">Routes</h3>
-                <p className="text-xs text-ink-muted">Sent to the right authority</p>
-              </div>
-            </div>
-
-            <div className="p-6 md:p-8 flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#48c792]/20 bg-[#48c792]/5 text-[#48c792] shrink-0">
-                <Wrench size={20} />
-              </div>
-              <div>
-                <h3 className="text-white font-medium text-[15px] mb-1">Fixed</h3>
-                <p className="text-xs text-ink-muted">Track progress till it's resolved</p>
-              </div>
-            </div>
-
-            <div className="p-6 md:p-8 flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full border-[#d946ef]/20 border bg-[#d946ef]/5 text-[#d946ef] shrink-0">
-                <Gift size={20} />
-              </div>
-              <div>
-                <h3 className="text-white font-medium text-[15px] mb-1">Rewards</h3>
-                <p className="text-xs text-ink-muted">Earn points for your contribution</p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="mx-auto max-w-7xl px-6 py-20">
-        <div className="flex flex-col lg:flex-row gap-12 lg:items-center">
+      {/* Stats Bar */}
+      <div className="w-full bg-white border-b border-[#CBD5E1] py-6 px-6 sm:px-10 lg:px-16 shadow-sm relative z-20 overflow-x-auto">
+        <div className="max-w-[1600px] mx-auto flex sm:grid sm:grid-cols-2 md:grid-cols-5 gap-6 sm:gap-4 lg:gap-6 divide-x divide-slate-100 min-w-[700px]">
           
-          <div className="lg:w-1/4">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-amber font-semibold block mb-4">
-              Making impact together
+          <div className="flex items-center gap-4 px-2 sm:px-4 shrink-0">
+            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+              <Camera className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <div className="text-[11px] text-slate-500 font-semibold mb-0.5 uppercase tracking-wide">Total Reports</div>
+              <div className="text-2xl font-black text-slate-900 leading-none mb-1">12,842</div>
+              <div className="text-[10px] text-slate-400 leading-none">All time reports</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 px-4 shrink-0">
+            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <div className="text-[11px] text-slate-500 font-semibold mb-0.5 uppercase tracking-wide">Resolved Issues</div>
+              <div className="text-2xl font-black text-slate-900 leading-none mb-1">9,215</div>
+              <div className="text-[10px] text-slate-400 leading-none">Issues fixed</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 px-4 shrink-0">
+            <div className="w-12 h-12 rounded-full bg-[#FFC000]/20 flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5 text-yellow-700" />
+            </div>
+            <div>
+              <div className="text-[11px] text-slate-500 font-semibold mb-0.5 uppercase tracking-wide">Active Citizens</div>
+              <div className="text-2xl font-black text-slate-900 leading-none mb-1">5,678</div>
+              <div className="text-[10px] text-slate-400 leading-none">Making a difference</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 px-4 shrink-0">
+            <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+              <Gift className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <div className="text-[11px] text-slate-500 font-semibold mb-0.5 uppercase tracking-wide">Reward Points Given</div>
+              <div className="text-2xl font-black text-slate-900 leading-none mb-1">2.4M</div>
+              <div className="text-[10px] text-slate-400 leading-none">Points distributed</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 px-4 shrink-0">
+            <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-5 h-5 text-teal-600" />
+            </div>
+            <div>
+              <div className="text-[11px] text-slate-500 font-semibold mb-0.5 uppercase tracking-wide">In Progress</div>
+              <div className="text-2xl font-black text-slate-900 leading-none mb-1">3,627</div>
+              <div className="text-[10px] text-slate-400 leading-none">Being resolved</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Section 02: HOW IT WORKS (Connected 7-Step Process Bar) */}
+      <section className="w-full border-b border-[#CBD5E1] bg-[#E7ECF0]/80 py-8 px-4 sm:px-8 lg:px-12">
+        <div className="w-full flex flex-col lg:flex-row items-start lg:items-center gap-8">
+          {/* Section 02 Header */}
+          <div className="flex items-center gap-2.5 min-w-[170px] shrink-0">
+            <span className="font-mono text-sm font-bold text-slate-900">02</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#FFC000] inline-block shadow-sm" />
+            <span className="font-mono text-xs font-extrabold uppercase tracking-wider text-slate-900">
+              HOW IT WORKS
             </span>
-            <h2 className="font-display text-4xl font-bold leading-[1.2] text-white">
-              Real issues.<br />
-              Real actions.<br />
-              <span className="text-amber">Real change.</span>
-            </h2>
           </div>
 
-          <div className="lg:w-3/4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="rounded-2xl border border-white/5 bg-[#12161f] p-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1b2230] text-[#7196ff] mb-6">
-                <Users2 size={18} />
-              </div>
-              <div className="text-2xl font-display font-bold text-white mb-1">25,000+</div>
-              <div className="text-sm font-medium text-white mb-1">Active Citizens</div>
-              <div className="text-xs text-ink-muted">Making our roads better together</div>
-            </div>
-            
-            <div className="rounded-2xl border border-white/5 bg-[#12161f] p-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1b2230] text-[#48c792] mb-6">
-                <ShieldCheck size={18} />
-              </div>
-              <div className="text-2xl font-display font-bold text-white mb-1">12,450</div>
-              <div className="text-sm font-medium text-white mb-1">Issues Reported</div>
-              <div className="text-xs text-ink-muted">Every report makes a difference</div>
-            </div>
+          {/* 7 Connected Steps Progression */}
+          <div className="relative w-full">
+            {/* Continuous dashed guide line */}
+            <div className="hidden md:block absolute top-6 left-6 right-6 h-0.5 border-t-2 border-dashed border-[#CBD5E1] z-0" />
 
-            <div className="rounded-2xl border border-white/5 bg-[#12161f] p-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1b2230] text-amber mb-6">
-                <Zap size={18} />
-              </div>
-              <div className="text-2xl font-display font-bold text-white mb-1">9,850</div>
-              <div className="text-sm font-medium text-white mb-1">Issues Resolved</div>
-              <div className="text-xs text-ink-muted">Fixed and closed successfully</div>
-            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-6 sm:gap-4 relative z-10">
+              {steps.map((step) => (
+                <div
+                  key={step.num}
+                  className="flex flex-col items-center text-center group cursor-default"
+                >
+                  {/* Step Icon Node */}
+                  <div className="w-12 h-12 rounded-full bg-white border border-slate-200/90 shadow-sm flex items-center justify-center mb-3 transition-all duration-200 group-hover:scale-110 group-hover:shadow-md group-hover:border-amber-400">
+                    {step.icon}
+                  </div>
 
-            <div className="rounded-2xl border border-white/5 bg-[#12161f] p-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1b2230] text-[#c084fc] mb-6">
-                <Trophy size={18} />
-              </div>
-              <div className="text-2xl font-display font-bold text-white mb-1">78%</div>
-              <div className="text-sm font-medium text-white mb-1">Resolution Rate</div>
-              <div className="text-xs text-ink-muted">Within committed time</div>
+                  {/* Step Meta */}
+                  <span className="font-mono text-[11px] font-bold text-slate-900 mb-0.5">
+                    {step.num}
+                  </span>
+                  <h3 className="font-mono text-[11px] sm:text-xs font-black tracking-wider uppercase text-slate-950 mb-1">
+                    {step.title}
+                  </h3>
+                  <p className="text-[11px] text-slate-600 font-medium leading-tight max-w-[120px]">
+                    {step.desc}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
-          
         </div>
       </section>
 
+      {/* Feature Value Cards */}
+      <section className="w-full px-6 sm:px-12 lg:px-16 py-12">
+        <div className="grid gap-6 md:grid-cols-3">
+          {[
+            {
+              icon: <ShieldCheck className="w-5 h-5 text-[#1E3A8A]" />,
+              title: "Verified Before It Counts",
+              body: "Every photo runs through AI verification first — eliminating spam, false alarms, and wasted authority response time.",
+            },
+            {
+              icon: <Sparkles className="w-5 h-5 text-[#FFC000]" />,
+              title: "Built to Keep You Reporting",
+              body: "Levels, streaks, and badges turn a public-good habit into an engaging and rewarding civic experience.",
+            },
+            {
+              icon: <Zap className="w-5 h-5 text-emerald-600" />,
+              title: "Open To Everyone",
+              body: "The live map shows every issue's verification status, authority assignment, and fix progress in open real-time.",
+            },
+          ].map((v) => (
+            <div
+              key={v.title}
+              className="rounded-xl border border-[#CBD5E1] bg-white/80 backdrop-blur-sm p-6 shadow-sm hover:shadow-md hover:border-slate-400 transition-all"
+            >
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center mb-4">
+                {v.icon}
+              </div>
+              <h3 className="font-display text-xl font-bold text-slate-950 uppercase tracking-tight">
+                {v.title}
+              </h3>
+              <p className="mt-2 text-sm text-slate-600 leading-relaxed font-medium">
+                {v.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="w-full border-t border-[#CBD5E1] py-6 px-6 text-center text-xs font-mono font-medium text-slate-500 bg-[#E7ECF0]">
+        CIVIC AI — REVOLUTIONIZING CIVIC INFRASTRUCTURE WITH AI
+      </footer>
     </div>
   );
 }
-

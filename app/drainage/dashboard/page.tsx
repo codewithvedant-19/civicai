@@ -10,6 +10,7 @@ import IssueCard from "@/components/IssueCard";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 import { apiGet } from "@/lib/apiClient";
 import type { Issue, Badge, DamageClass, PointsLedgerEntry } from "@/domain/types";
+import { MockDrainageData, DRAINAGE_CLASSES } from "@/lib/mockDrainageData";
 
 interface PointsData {
   pointsBalance: number;
@@ -23,18 +24,21 @@ interface PointsData {
   impact: { reported: number; confirmedByOthers: number; resolved: number };
 }
 
-export default function DashboardPage() {
+export default function DrainageDashboardPage() {
   const { user, loading } = useCurrentUser();
   const router = useRouter();
   const [data, setData] = useState<PointsData | null>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
-  const [damageClasses, setDamageClasses] = useState<DamageClass[]>([]);
+  const [damageClasses, setDamageClasses] = useState<DamageClass[]>(DRAINAGE_CLASSES);
 
   useEffect(() => {
     if (!user) return;
+    // We re-use the Roads points history so gamification still feels alive in demo
     apiGet<PointsData>("/api/points-history").then(setData).catch(() => {});
-    apiGet<{ issues: Issue[] }>("/api/issues?mine=true").then((d) => setIssues(d.issues)).catch(() => {});
-    apiGet<{ damageClasses: DamageClass[] }>("/api/public/stats").then((d) => setDamageClasses(d.damageClasses)).catch(() => {});
+    
+    // Load issues from our local mock data
+    const myIssues = MockDrainageData.getIssues().filter((i) => i.reporterId === user.id);
+    setIssues(myIssues.reverse()); // latest first
   }, [user]);
 
   if (loading) return null;
@@ -43,25 +47,32 @@ export default function DashboardPage() {
     return null;
   }
 
+  // Calculate local mock impact for Drainage
+  const mockImpact = {
+    reported: issues.length,
+    confirmedByOthers: issues.reduce((acc, i) => acc + (i.confirmations?.length || 0), 0),
+    resolved: issues.filter(i => i.status === "resolved").length,
+  };
+
   return (
     <div className="min-h-screen bg-[#E7ECF0] blueprint-bg text-slate-900">
       <Navbar user={user} />
       <div className="mx-auto max-w-5xl px-4 sm:px-6 py-10">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4 bg-white/80 backdrop-blur-sm p-6 rounded-2xl border border-[#CBD5E1] shadow-sm">
           <div>
-            <div className="inline-block mb-1 px-2 py-1 text-[10px] font-bold tracking-widest text-blue-800 bg-blue-100 rounded border border-blue-200 uppercase">
-              Roads & Potholes Department
+            <div className="inline-block mb-1 px-2 py-1 text-[10px] font-bold tracking-widest text-emerald-800 bg-emerald-100 rounded border border-emerald-200 uppercase">
+              Drainage Department
             </div>
             <h1 className="font-display text-3xl font-black uppercase tracking-tight text-slate-950">
               Welcome back, {user.name.split(" ")[0]}
             </h1>
-            <p className="text-xs text-slate-600 font-medium">Your personal civic impact & road verification stats.</p>
+            <p className="text-xs text-slate-600 font-medium">Your personal civic impact & Drainage verification stats.</p>
           </div>
           <Link
-            href="/report"
+            href="/Drainage/report"
             className="flex items-center gap-2 rounded-xl bg-[#FFC000] hover:bg-[#EBB000] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-950 shadow-sm transition-all hover:scale-105"
           >
-            <Camera size={16} /> Report Road Damage
+            <Camera size={16} /> Report Drainage Issue
           </Link>
         </div>
 
@@ -82,9 +93,9 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-3 gap-4 text-center mb-8">
-              <StatCard label="Reported" value={data.impact.reported} />
-              <StatCard label="Confirmed by others" value={data.impact.confirmedByOthers} />
-              <StatCard label="Resolved" value={data.impact.resolved} />
+              <StatCard label="Drainage Issues Reported" value={mockImpact.reported} />
+              <StatCard label="Confirmed by others" value={mockImpact.confirmedByOthers} />
+              <StatCard label="Resolved" value={mockImpact.resolved} />
             </div>
 
             <div className="mb-8">
@@ -93,30 +104,15 @@ export default function DashboardPage() {
                 <BadgeShelf allBadges={data.allBadges} earnedIds={new Set(data.badges.map((b) => b.id))} />
               </div>
             </div>
-
-            <div className="mb-8">
-              <h2 className="mb-3 font-display text-xl font-black uppercase tracking-tight text-slate-950">Points Ledger</h2>
-              <div className="overflow-hidden rounded-2xl border border-[#CBD5E1] bg-white shadow-sm">
-                {data.ledger.length === 0 && <p className="p-5 text-xs text-slate-500">No points yet — submit your first report!</p>}
-                {data.ledger.slice(0, 10).map((e) => (
-                  <div key={e.id} className="flex items-center justify-between border-b border-slate-100 px-5 py-3 last:border-b-0 text-xs">
-                    <span className="font-semibold text-slate-800 uppercase tracking-wide">{e.eventType.replace(/_/g, " ")}</span>
-                    <span className={`font-mono font-bold ${e.amount >= 0 ? "text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded" : "text-red-700 bg-red-50 px-2 py-0.5 rounded"}`}>
-                      {e.amount >= 0 ? "+" : ""}{e.amount} pts
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </>
         )}
 
         <div>
-          <h2 className="mb-3 font-display text-xl font-black uppercase tracking-tight text-slate-950">My Submitted Road Reports</h2>
+          <h2 className="mb-3 font-display text-xl font-black uppercase tracking-tight text-slate-950">My Submitted Drainage Reports</h2>
           <div className="space-y-3">
-            {issues.length === 0 && <p className="text-xs text-slate-500 bg-white p-5 rounded-xl border border-slate-200">You haven't reported anything yet.</p>}
+            {issues.length === 0 && <p className="text-xs text-slate-500 bg-white p-5 rounded-xl border border-slate-200">You haven't reported any Drainage issues yet.</p>}
             {issues.map((i) => (
-              <IssueCard key={i.id} issue={i} damageClass={damageClasses.find((d) => d.id === i.damageClassId)} href={`/issues/${i.id}`} />
+              <IssueCard key={i.id} issue={i} damageClass={damageClasses.find((d) => d.id === i.damageClassId)} href={`/Drainage/issues/${i.id}`} />
             ))}
           </div>
         </div>
