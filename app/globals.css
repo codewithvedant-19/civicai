@@ -1,56 +1,86 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Overpass:wght@600;700;800;900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg-blueprint: #E7ECF0;
-  --line-blueprint: #D5DDE6;
+  --bg-blueprint: #EEF2F6;
+  --line-blueprint: #DDE4EC;
 }
 
 body {
-  background-color: #E7ECF0;
+  background-color: #EEF2F6;
   color: #0F172A;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
 }
 
-/* Precision architectural grid background overlay */
+/* Subtle architectural grid background overlay */
 .blueprint-bg {
-  background-color: #E7ECF0;
-  background-image: 
-    linear-gradient(to right, rgba(203, 213, 225, 0.45) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(203, 213, 225, 0.45) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-color: #EEF2F6;
+  background-image:
+    linear-gradient(to right, rgba(148, 163, 184, 0.14) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.14) 1px, transparent 1px);
+  background-size: 44px 44px;
 }
 
-/* Subtle crosshair grid intersection markers */
-.crosshair-grid {
-  position: relative;
-}
-.crosshair-grid::before {
-  content: "+";
-  position: absolute;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
-  color: rgba(148, 163, 184, 0.6);
-  pointer-events: none;
+/* Reusable component primitives for a consistent design system */
+@layer components {
+  .card {
+    @apply rounded-2xl border border-asphalt-line bg-white shadow-card;
+  }
+  .card-interactive {
+    @apply card transition-all duration-200 hover:shadow-card-hover hover:border-slate-300 hover:-translate-y-0.5;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-light/60 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply btn bg-amber text-slate-950 hover:bg-amber-hover shadow-sm active:scale-[0.98];
+  }
+  .btn-secondary {
+    @apply btn bg-teal text-white hover:bg-teal-light shadow-sm active:scale-[0.98];
+  }
+  .btn-ghost {
+    @apply btn bg-white border border-asphalt-line text-ink hover:bg-slate-50 hover:border-slate-300;
+  }
+  .eyebrow {
+    @apply font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink-faint;
+  }
+  .skeleton {
+    @apply relative overflow-hidden rounded-lg bg-slate-200/70;
+  }
+  .skeleton::after {
+    content: "";
+    @apply absolute inset-0 -translate-x-full;
+    background-image: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0,
+      rgba(255, 255, 255, 0.6) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    animation: shimmer 1.5s infinite;
+  }
 }
 
-/* Custom scrollbars matching technical design */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Custom scrollbars matching the design */
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #E7ECF0;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: #CBD5E1;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94A3B8;
@@ -61,7 +91,7 @@ body {
   background: #FFFFFF !important;
   color: #0F172A !important;
   border: 1px solid #CBD5E1 !important;
-  border-radius: 8px !important;
+  border-radius: 10px !important;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
 }
 .maplibregl-popup-tip {

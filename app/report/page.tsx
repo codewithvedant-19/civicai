@@ -114,103 +114,145 @@ export default function ReportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#E7ECF0] blueprint-bg text-slate-900">
+    <div className="min-h-screen bg-asphalt blueprint-bg text-slate-900">
       <Navbar user={user} />
-      <div className="mx-auto max-w-2xl px-4 sm:px-6 py-10">
-        <div className="mb-6 bg-white/80 backdrop-blur-sm p-6 rounded-2xl border border-[#CBD5E1] shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-[#FFC000] text-slate-900 rounded-xl shadow-sm">
-              <Camera size={26} />
-            </div>
-            <div>
-              <h1 className="font-display text-3xl font-black uppercase tracking-tight text-slate-950">
-                Report Road Damage
-              </h1>
-              <p className="text-xs text-slate-600 font-medium">Capture or upload photo · AI verifies and routes immediately</p>
-            </div>
-          </div>
+      <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+        {/* Header */}
+        <div className="mb-6">
+          <p className="eyebrow mb-2">Report an Issue</p>
+          <h1 className="font-display text-3xl font-extrabold tracking-tight text-slate-950">
+            Report Road Damage
+          </h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Add a clear photo and your location. Our AI verifies the issue and
+            routes it to the right authority instantly.
+          </p>
         </div>
 
         <AnimatePresence mode="wait">
           {!result ? (
             <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-5">
-              {error && <p className="rounded-xl bg-red-50 border border-red-200 p-3.5 text-xs font-semibold text-red-700 shadow-sm">{error}</p>}
+              {error && (
+                <p className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm font-medium text-red-700 shadow-sm">
+                  <XCircle size={18} className="mt-0.5 shrink-0" />
+                  {error}
+                </p>
+              )}
 
-              <div className="rounded-2xl border-2 border-dashed border-[#CBD5E1] bg-white p-8 text-center shadow-sm">
-                {preview ? (
-                  <img src={preview} alt="Preview" className="mx-auto max-h-72 rounded-xl object-contain shadow-sm" />
-                ) : (
-                  <div className="flex flex-col items-center gap-3 text-slate-500 py-6">
-                    <div className="p-4 rounded-full bg-slate-100 text-slate-700">
-                      <Camera size={36} />
-                    </div>
-                    <p className="text-sm font-semibold text-slate-700">No damage photo selected</p>
-                    <p className="text-xs text-slate-500 max-w-xs">Upload a clear photo of road damage (pothole, crack, debris, erosion)</p>
+              {/* Step 1 — Photo */}
+              <div className="card p-5 sm:p-6">
+                <div className="mb-4 flex items-center gap-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal text-sm font-bold text-white">1</span>
+                  <div>
+                    <h2 className="font-display text-base font-bold text-slate-900">Photo of the issue</h2>
+                    <p className="text-xs text-slate-500">Pothole, crack, debris or erosion — a clear, close shot works best.</p>
                   </div>
-                )}
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                  onChange={(e) => onFile(e.target.files?.[0] ?? null)}
-                />
-                <div className="mt-4 flex justify-center gap-3">
-                  <button
-                    onClick={() => fileRef.current?.click()}
-                    className="flex items-center gap-2 rounded-xl bg-[#FFC000] hover:bg-[#EBB000] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-950 shadow-sm transition-all hover:scale-105"
-                  >
-                    <Upload size={16} /> {preview ? "Change Photo" : "Capture / Upload Photo"}
-                  </button>
+                </div>
+
+                <div className="rounded-2xl border-2 border-dashed border-asphalt-line bg-asphalt-surface p-6 text-center">
+                  {preview ? (
+                    <img src={preview || "/placeholder.svg"} alt="Preview" className="mx-auto max-h-72 rounded-xl object-contain shadow-sm" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 py-6 text-slate-500">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm">
+                        <Camera size={30} />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-700">No photo selected yet</p>
+                      <p className="max-w-xs text-xs text-slate-500">Upload or capture a clear photo of the road damage.</p>
+                    </div>
+                  )}
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={(e) => onFile(e.target.files?.[0] ?? null)}
+                  />
+                  <div className="mt-4 flex justify-center">
+                    <button onClick={() => fileRef.current?.click()} className="btn-primary px-5 py-2.5 text-sm">
+                      <Upload size={16} /> {preview ? "Change Photo" : "Capture / Upload Photo"}
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[#CBD5E1] bg-white p-5 shadow-sm space-y-3">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Target Municipal Jurisdiction
-                </label>
+              {/* Step 2 — Location */}
+              <div className="card p-5 sm:p-6">
+                <div className="mb-4 flex items-center gap-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal text-sm font-bold text-white">2</span>
+                  <div>
+                    <h2 className="font-display text-base font-bold text-slate-900">Location</h2>
+                    <p className="text-xs text-slate-500">Select the municipal jurisdiction and set the exact coordinates.</p>
+                  </div>
+                </div>
+
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700">Municipal jurisdiction</label>
                 <select
                   value={selectedCity}
                   onChange={(e) => {
                     setSelectedCity(e.target.value);
                     setCoords(null);
                   }}
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-xs font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-[#FFC000]"
+                  className="w-full rounded-xl border border-asphalt-line bg-asphalt-surface px-3.5 py-2.5 text-sm font-medium text-slate-900 outline-none transition focus:border-teal-light focus:ring-2 focus:ring-teal-light/40"
                 >
                   {jurisdictions.map((j) => (
                     <option key={j.id} value={j.id}>{j.city}, {j.state}</option>
                   ))}
                 </select>
+
+                {coords && (
+                  <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-sm font-medium text-emerald-700">
+                    <CheckCircle2 size={16} />
+                    Location set — {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
+                  </div>
+                )}
+
                 <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                   <button
                     onClick={useDemoCity}
                     disabled={!selectedCity}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-2.5 text-xs font-bold uppercase tracking-wider text-blue-700 hover:bg-blue-100 disabled:opacity-40 transition-all"
+                    className="btn-ghost flex-1 py-2.5 text-sm disabled:opacity-40"
                   >
-                    <MapPin size={16} /> {coords ? `Location Set (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})` : "Use Municipal Coordinates"}
+                    <MapPin size={16} /> {coords ? "Reset Municipal Coordinates" : "Use Municipal Coordinates"}
                   </button>
-                  <button
-                    onClick={tryRealGps}
-                    className="flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    <MapPin size={14} className={locating ? "animate-pulse text-amber-500" : ""} />
-                    {locating ? "Locating…" : "Try Device GPS"}
+                  <button onClick={tryRealGps} className="btn-ghost py-2.5 text-sm">
+                    <MapPin size={16} className={locating ? "animate-pulse text-amber-500" : ""} />
+                    {locating ? "Locating…" : "Use Device GPS"}
                   </button>
                 </div>
               </div>
 
-              <button
-                onClick={submit}
-                disabled={submitting || !file || !coords}
-                className="w-full rounded-xl bg-blue-900 hover:bg-blue-950 py-3.5 font-bold uppercase tracking-wider text-xs sm:text-sm text-white shadow-sm transition-all disabled:opacity-40"
-              >
-                {submitting ? (
-                  <span className="flex items-center justify-center gap-2"><Loader2 size={18} className="animate-spin text-[#FFC000]" /> Running AI verification…</span>
-                ) : (
-                  "Submit Report For AI Verification"
+              {/* Step 3 — Submit */}
+              <div className="card p-5 sm:p-6">
+                <div className="mb-4 flex items-center gap-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal text-sm font-bold text-white">3</span>
+                  <div>
+                    <h2 className="font-display text-base font-bold text-slate-900">Submit for verification</h2>
+                    <p className="text-xs text-slate-500">We&apos;ll run AI verification and route your report automatically.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={submit}
+                  disabled={submitting || !file || !coords}
+                  className="btn-secondary w-full py-3.5 text-sm disabled:opacity-40"
+                >
+                  {submitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 size={18} className="animate-spin text-amber" /> Running AI verification…
+                    </span>
+                  ) : (
+                    "Submit Report for AI Verification"
+                  )}
+                </button>
+                {(!file || !coords) && (
+                  <p className="mt-2.5 text-center text-xs text-slate-400">
+                    {!file ? "Add a photo" : ""}
+                    {!file && !coords ? " and " : ""}
+                    {!coords ? "set your location" : ""} to enable submission.
+                  </p>
                 )}
-              </button>
+              </div>
             </motion.div>
           ) : (
             <motion.div key="result" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">

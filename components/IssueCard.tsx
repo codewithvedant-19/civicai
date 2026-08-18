@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MapPin, ArrowUpRight } from "lucide-react";
 import type { Issue, DamageClass } from "@/domain/types";
 import { PriorityBadge, SeverityDot, StatusPill } from "@/components/Badges";
 
@@ -14,24 +15,38 @@ export default function IssueCard({
   return (
     <Link
       href={href}
-      className="flex gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm transition-all hover:shadow-md hover:border-amber-400"
+      className="group flex gap-3.5 rounded-2xl border border-asphalt-line bg-white p-3.5 shadow-card transition-all duration-200 hover:shadow-card-hover hover:border-slate-300 hover:-translate-y-0.5"
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={issue.imageUrl} alt="" className="h-20 w-20 flex-shrink-0 rounded-lg object-cover border border-slate-100" />
+      <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl border border-slate-100">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={issue.imageUrl || "/placeholder.svg"}
+          alt=""
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+      </div>
       <div className="min-w-0 flex-1">
-        <div className="mb-1 flex flex-wrap items-center gap-2">
+        <div className="mb-1.5 flex flex-wrap items-center gap-2">
           <SeverityDot severity={issue.severity} />
-          <span className="text-sm font-semibold text-slate-900">{damageClass?.label ?? issue.damageClassId}</span>
+          <span className="font-display text-sm font-bold text-slate-900">
+            {damageClass?.label ?? issue.damageClassId}
+          </span>
           <PriorityBadge band={issue.priorityBand} />
+        </div>
+        <div className="mb-2">
           <StatusPill status={issue.status} />
         </div>
-        <p className="truncate text-xs text-slate-600 font-medium">{issue.address}</p>
-        <div className="mt-1.5 flex gap-3 font-mono text-[11px] text-slate-500">
+        <p className="flex items-center gap-1 truncate text-xs font-medium text-slate-600">
+          <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-slate-400" />
+          <span className="truncate">{issue.address}</span>
+        </p>
+        <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[11px] text-slate-500">
           <span>Confidence {(issue.aiConfidence * 100).toFixed(0)}%</span>
           <span>{1 + issue.confirmations.length} reporter{issue.confirmations.length ? "s" : ""}</span>
           <span>Score {issue.priorityScore}</span>
         </div>
       </div>
+      <ArrowUpRight className="h-4 w-4 flex-shrink-0 self-start text-slate-300 transition-colors group-hover:text-amber" />
     </Link>
   );
 }

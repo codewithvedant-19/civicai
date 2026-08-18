@@ -1,326 +1,259 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import {
   Camera,
   MapPin,
-  Users,
   Building2,
   Wrench,
   Gift,
   ArrowUpRight,
-  Globe,
   Sparkles,
   ShieldCheck,
   Zap,
   CheckCircle2,
   Trash2,
   Droplet,
+  Construction,
+  Cpu,
+  Award,
+  TrendingUp,
+  Users,
+  Activity,
+  ArrowRight,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useCurrentUser } from "@/lib/useCurrentUser";
+import { apiGet } from "@/lib/apiClient";
+
+type Stats = {
+  totalIssues: number;
+  resolved: number;
+  byStatus: Record<string, number>;
+};
 
 export default function HomePage() {
   const { user } = useCurrentUser();
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [statsError, setStatsError] = useState(false);
+
+  useEffect(() => {
+    apiGet<Stats>("/api/public/stats")
+      .then(setStats)
+      .catch(() => setStatsError(true));
+  }, []);
+
+  const inProgress = stats
+    ? (stats.byStatus["repair_in_progress"] ?? 0) +
+      (stats.byStatus["officer_assigned"] ?? 0) +
+      (stats.byStatus["under_review"] ?? 0) +
+      (stats.byStatus["authority_notified"] ?? 0)
+    : 0;
+  const resolutionRate =
+    stats && stats.totalIssues > 0
+      ? Math.round((stats.resolved / stats.totalIssues) * 100)
+      : 0;
+
+  const departments = [
+    {
+      name: "Potholes & Roads",
+      desc: "Report damaged roads, potholes and unsafe streets.",
+      icon: Construction,
+      href: "/report",
+      accent: "text-amber-600",
+      chip: "bg-amber-100",
+    },
+    {
+      name: "Electricity",
+      desc: "Street lights, power outages and exposed wiring.",
+      icon: Zap,
+      href: "/electricity/report",
+      accent: "text-violet-600",
+      chip: "bg-violet-100",
+    },
+    {
+      name: "Sanitation",
+      desc: "Garbage piles, overflowing bins and cleanliness.",
+      icon: Trash2,
+      href: "/sanitation/report",
+      accent: "text-emerald-600",
+      chip: "bg-emerald-100",
+    },
+    {
+      name: "Drainage & Water",
+      desc: "Blocked drains, water logging and leakages.",
+      icon: Droplet,
+      href: "/drainage/report",
+      accent: "text-teal-light",
+      chip: "bg-teal-dim",
+    },
+  ];
 
   const steps = [
     {
       num: "01",
-      title: "CITIZEN",
-      desc: "You report a road issue",
-      icon: (
-        <Camera className="w-5 h-5 text-[#1E3A8A] stroke-[2.2]" />
-      ),
+      title: "Report the Issue",
+      desc: "Snap a photo, add the location and describe the problem in seconds.",
+      icon: Camera,
     },
     {
       num: "02",
-      title: "AI VERIFICATION",
-      desc: "AI verifies the issue",
-      icon: (
-        <div className="flex items-center justify-center font-mono text-[#1E3A8A] font-extrabold text-[12px] tracking-tighter">
-          <span className="text-sm font-light mr-0.5">[</span>
-          <span>AI</span>
-          <span className="text-sm font-light ml-0.5">]</span>
-        </div>
-      ),
+      title: "AI Verification",
+      desc: "Our AI validates the report and classifies severity automatically.",
+      icon: Cpu,
     },
     {
       num: "03",
-      title: "LOCATION",
-      desc: "Location is captured",
-      icon: (
-        <MapPin className="w-5 h-5 text-[#1E3A8A] stroke-[2.2]" />
-      ),
+      title: "Routed to Authority",
+      desc: "The right department is notified and an officer is assigned.",
+      icon: Building2,
     },
     {
       num: "04",
-      title: "COMMUNITY",
-      desc: "Neighbors upvote",
-      icon: (
-        <Users className="w-5 h-5 text-[#1E3A8A] stroke-[2.2]" />
-      ),
+      title: "Resolved & Rewarded",
+      desc: "Track progress to resolution and earn civic reward points.",
+      icon: Award,
+    },
+  ];
+
+  const statCards = [
+    {
+      label: "Total Reports",
+      value: stats?.totalIssues,
+      caption: "Issues reported by citizens",
+      icon: Camera,
+      accent: "text-teal",
+      chip: "bg-teal-dim",
     },
     {
-      num: "05",
-      title: "AUTHORITY",
-      desc: "Sent to right department",
-      icon: (
-        <Building2 className="w-5 h-5 text-[#1E3A8A] stroke-[2.2]" />
-      ),
+      label: "Resolved",
+      value: stats?.resolved,
+      caption: "Issues fixed and closed",
+      icon: CheckCircle2,
+      accent: "text-emerald-600",
+      chip: "bg-emerald-100",
     },
     {
-      num: "06",
-      title: "REPAIR",
-      desc: "Issue is resolved",
-      icon: (
-        <Wrench className="w-5 h-5 text-[#1E3A8A] stroke-[2.2]" />
-      ),
+      label: "In Progress",
+      value: inProgress,
+      caption: "Currently being handled",
+      icon: Activity,
+      accent: "text-amber-600",
+      chip: "bg-amber-100",
     },
     {
-      num: "07",
-      title: "REWARD",
-      desc: "You earn points",
-      icon: (
-        <Gift className="w-5 h-5 text-[#1E3A8A] stroke-[2.2]" />
-      ),
+      label: "Resolution Rate",
+      value: stats ? resolutionRate : undefined,
+      suffix: "%",
+      caption: "Reports resolved to date",
+      icon: TrendingUp,
+      accent: "text-violet-600",
+      chip: "bg-violet-100",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-[#E7ECF0] text-slate-900 flex flex-col font-body blueprint-bg selection:bg-[#FFC000] selection:text-black">
-      {/* Top Navigation */}
+    <div className="flex min-h-screen flex-col bg-asphalt text-slate-900">
       <Navbar user={user} />
 
-      {/* Hero Section */}
-      <div className="relative w-full min-h-[700px] flex flex-col justify-between overflow-hidden border-b border-[#CBD5E1]">
-        {/* Background Image */}
+      {/* Hero */}
+      <section className="relative w-full overflow-hidden border-b border-asphalt-line">
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/city-bg.jpg"
-            alt="City Background"
+            alt=""
             fill
             className="object-cover object-bottom"
             priority
           />
-          {/* Soft gradient overlay for text readability on left */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-transparent z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-asphalt via-transparent to-transparent" />
         </div>
 
-        {/* Hero Content */}
-        <div className="relative z-20 flex-1 w-full max-w-[1600px] mx-auto px-6 sm:px-10 lg:px-16 py-12 lg:py-20 flex flex-col xl:flex-row items-center justify-between gap-10">
-          
-          {/* Left Column */}
-          <div className="flex-1 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm mb-6">
-              <Sparkles className="w-4 h-4 text-[#FFC000]" />
-              <span className="font-mono text-[10px] font-extrabold uppercase tracking-widest text-slate-800">
-                AI-POWERED CIVIC PLATFORM
+        <div className="relative z-10 mx-auto flex w-full max-w-[1600px] flex-col items-center gap-12 px-6 py-16 sm:px-10 lg:flex-row lg:px-16 lg:py-24">
+          <div className="max-w-2xl flex-1 animate-fade-in-up">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-asphalt-line bg-white px-3 py-1.5 shadow-sm">
+              <Sparkles className="h-4 w-4 text-amber" />
+              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-slate-700">
+                AI-Powered Civic Platform
               </span>
             </div>
 
-            <h1 className="font-display font-black text-5xl sm:text-6xl md:text-[80px] leading-[1.05] tracking-tight text-slate-900 mb-6">
-              See a Problem.<br />
-              <span className="text-[#FFC000]">Report It.</span><br />
-              Get It Fixed.
+            <h1 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-slate-950 text-balance sm:text-5xl md:text-6xl">
+              See a problem.
+              <br />
+              Report it. <span className="text-teal">Get it fixed.</span>
             </h1>
 
-            <p className="font-body text-slate-700 text-base md:text-lg max-w-lg leading-relaxed mb-10">
-              From potholes to garbage piled up on the street — report civic issues, track progress, and help build a cleaner, safer city for everyone.
+            <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-slate-600 md:text-lg">
+              CivicAI lets citizens report potholes, electricity, sanitation and
+              drainage issues in seconds — then tracks every report from
+              verification to resolution, all in one transparent platform.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Link href="/report" className="flex items-center justify-between bg-[#FFC000] hover:bg-[#EBB000] text-slate-950 font-bold uppercase tracking-wider text-[11px] sm:text-xs px-5 py-3.5 rounded-xl shadow-sm transition-all hover:scale-[1.02]">
-                <div className="flex items-center gap-2.5">
-                  <Wrench className="w-4 h-4" />
-                  <span>REPORT ROAD ISSUE</span>
-                </div>
-                <ArrowUpRight className="w-4 h-4 opacity-50" />
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link href="/report" className="btn-primary px-6 py-3.5 text-sm">
+                <Wrench className="h-[18px] w-[18px]" />
+                Report an Issue
               </Link>
-              
-              <Link href="/sanitation/report" className="flex items-center justify-between bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase tracking-wider text-[11px] sm:text-xs px-5 py-3.5 rounded-xl shadow-sm transition-all hover:scale-[1.02]">
-                <div className="flex items-center gap-2.5">
-                  <Trash2 className="w-4 h-4" />
-                  <span>REPORT SANITATION ISSUE</span>
-                </div>
-                <ArrowUpRight className="w-4 h-4 opacity-50" />
-              </Link>
-
-              <Link href="/electricity/report" className="flex items-center justify-between bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase tracking-wider text-[11px] sm:text-xs px-5 py-3.5 rounded-xl shadow-sm transition-all hover:scale-[1.02]">
-                <div className="flex items-center gap-2.5">
-                  <Zap className="w-4 h-4" />
-                  <span>REPORT ELECTRICITY ISSUE</span>
-                </div>
-                <ArrowUpRight className="w-4 h-4 opacity-50" />
-              </Link>
-
-              <Link href="/drainage/report" className="flex items-center justify-between bg-teal-600 hover:bg-teal-500 text-white font-bold uppercase tracking-wider text-[11px] sm:text-xs px-5 py-3.5 rounded-xl shadow-sm transition-all hover:scale-[1.02]">
-                <div className="flex items-center gap-2.5">
-                  <Droplet className="w-4 h-4" />
-                  <span>REPORT DRAINAGE ISSUE</span>
-                </div>
-                <ArrowUpRight className="w-4 h-4 opacity-50" />
+              <Link href="/dashboard" className="btn-ghost px-6 py-3.5 text-sm">
+                <MapPin className="h-[18px] w-[18px]" />
+                Track a Complaint
               </Link>
             </div>
-          </div>
 
-          {/* Center Badge (Hidden on mobile) */}
-          <div className="hidden 2xl:flex items-center justify-center relative w-48 h-48 mx-4 shrink-0">
-            <div className="absolute inset-0 rounded-full border border-dashed border-emerald-400/50 animate-[spin_20s_linear_infinite]" />
-            <div className="absolute inset-2 rounded-full border border-emerald-400/30" />
-            <div className="w-32 h-32 bg-white rounded-full shadow-xl flex flex-col items-center justify-center p-4 text-center z-10 border border-slate-100">
-              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-800 mb-1">CIVIC AI</span>
-              <Building2 className="w-8 h-8 text-emerald-600 mb-1" />
-              <span className="text-[9px] font-semibold text-slate-500 uppercase">Better City, Together</span>
-            </div>
-            {/* Connecting lines illustration */}
-            <svg className="absolute left-full top-1/2 -translate-y-1/2 w-32 h-64 -z-10" viewBox="0 0 100 200" fill="none">
-              <path d="M0,100 C50,100 50,20 100,20" stroke="rgba(16,185,129,0.3)" strokeWidth="1" strokeDasharray="4 4" />
-              <path d="M0,100 C50,100 50,180 100,180" stroke="rgba(16,185,129,0.3)" strokeWidth="1" strokeDasharray="4 4" />
-            </svg>
-          </div>
-
-          {/* Right Column: 4 Images Grid (Restored) */}
-          <div className="w-full xl:w-[600px] shrink-0 relative flex items-center justify-center p-4">
-            <div className="relative w-full max-w-lg lg:max-w-xl aspect-[16/16] sm:aspect-[16/14] flex items-center justify-center group z-10">
-              <div className="grid grid-cols-2 grid-rows-2 gap-3 w-full h-full bg-white/40 p-3 rounded-3xl backdrop-blur-sm border border-white/50 shadow-2xl">
-                <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-md">
-                  <Image
-                    src="/images/hero-3d.jpg"
-                    alt="Civic AI - Roads"
-                    fill
-                    priority
-                    className="object-cover hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-md">
-                  <Image
-                    src="/images/sanitation-3d.jpg"
-                    alt="Civic AI - Sanitation"
-                    fill
-                    priority
-                    className="object-cover hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-md group/img">
-                  <img
-                    src="/images/elec-drainage.jpg"
-                    alt="Civic AI - Electricity"
-                    className="absolute top-0 left-0 w-[200%] max-w-none h-full object-cover group-hover/img:scale-105 transition-transform duration-500 origin-left"
-                  />
-                </div>
-                <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-md group/img">
-                  <img
-                    src="/images/elec-drainage.jpg"
-                    alt="Civic AI - Drainage"
-                    className="absolute top-0 right-0 w-[200%] max-w-none h-full object-cover group-hover/img:scale-105 transition-transform duration-500 origin-right"
-                  />
-                </div>
+            <div className="mt-8 flex items-center gap-6 text-slate-500">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                <span className="text-xs font-medium">AI-verified reports</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-teal" />
+                <span className="text-xs font-medium">Community powered</span>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Stats Bar */}
-      <div className="w-full bg-white border-b border-[#CBD5E1] py-6 px-6 sm:px-10 lg:px-16 shadow-sm relative z-20 overflow-x-auto">
-        <div className="max-w-[1600px] mx-auto flex sm:grid sm:grid-cols-2 md:grid-cols-5 gap-6 sm:gap-4 lg:gap-6 divide-x divide-slate-100 min-w-[700px]">
-          
-          <div className="flex items-center gap-4 px-2 sm:px-4 shrink-0">
-            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-              <Camera className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <div className="text-[11px] text-slate-500 font-semibold mb-0.5 uppercase tracking-wide">Total Reports</div>
-              <div className="text-2xl font-black text-slate-900 leading-none mb-1">12,842</div>
-              <div className="text-[10px] text-slate-400 leading-none">All time reports</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 px-4 shrink-0">
-            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <div className="text-[11px] text-slate-500 font-semibold mb-0.5 uppercase tracking-wide">Resolved Issues</div>
-              <div className="text-2xl font-black text-slate-900 leading-none mb-1">9,215</div>
-              <div className="text-[10px] text-slate-400 leading-none">Issues fixed</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 px-4 shrink-0">
-            <div className="w-12 h-12 rounded-full bg-[#FFC000]/20 flex items-center justify-center shrink-0">
-              <Users className="w-5 h-5 text-yellow-700" />
-            </div>
-            <div>
-              <div className="text-[11px] text-slate-500 font-semibold mb-0.5 uppercase tracking-wide">Active Citizens</div>
-              <div className="text-2xl font-black text-slate-900 leading-none mb-1">5,678</div>
-              <div className="text-[10px] text-slate-400 leading-none">Making a difference</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 px-4 shrink-0">
-            <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
-              <Gift className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <div className="text-[11px] text-slate-500 font-semibold mb-0.5 uppercase tracking-wide">Reward Points Given</div>
-              <div className="text-2xl font-black text-slate-900 leading-none mb-1">2.4M</div>
-              <div className="text-[10px] text-slate-400 leading-none">Points distributed</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 px-4 shrink-0">
-            <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-5 h-5 text-teal-600" />
-            </div>
-            <div>
-              <div className="text-[11px] text-slate-500 font-semibold mb-0.5 uppercase tracking-wide">In Progress</div>
-              <div className="text-2xl font-black text-slate-900 leading-none mb-1">3,627</div>
-              <div className="text-[10px] text-slate-400 leading-none">Being resolved</div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Section 02: HOW IT WORKS (Connected 7-Step Process Bar) */}
-      <section className="w-full border-b border-[#CBD5E1] bg-[#E7ECF0]/80 py-8 px-4 sm:px-8 lg:px-12">
-        <div className="w-full flex flex-col lg:flex-row items-start lg:items-center gap-8">
-          {/* Section 02 Header */}
-          <div className="flex items-center gap-2.5 min-w-[170px] shrink-0">
-            <span className="font-mono text-sm font-bold text-slate-900">02</span>
-            <span className="w-2.5 h-2.5 rounded-full bg-[#FFC000] inline-block shadow-sm" />
-            <span className="font-mono text-xs font-extrabold uppercase tracking-wider text-slate-900">
-              HOW IT WORKS
-            </span>
-          </div>
-
-          {/* 7 Connected Steps Progression */}
-          <div className="relative w-full">
-            {/* Continuous dashed guide line */}
-            <div className="hidden md:block absolute top-6 left-6 right-6 h-0.5 border-t-2 border-dashed border-[#CBD5E1] z-0" />
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-6 sm:gap-4 relative z-10">
-              {steps.map((step) => (
+          <div className="w-full max-w-lg flex-1 animate-fade-in">
+            <div className="grid grid-cols-2 gap-3 rounded-3xl border border-white/60 bg-white/50 p-3 shadow-card-hover backdrop-blur-sm">
+              {[
+                { src: "/images/hero-3d.jpg", label: "Roads" },
+                { src: "/images/sanitation-3d.jpg", label: "Sanitation" },
+                { src: "/images/elec-drainage.jpg", label: "Electricity", origin: "origin-left" },
+                { src: "/images/elec-drainage.jpg", label: "Drainage", origin: "origin-right", right: true },
+              ].map((img, i) => (
                 <div
-                  key={step.num}
-                  className="flex flex-col items-center text-center group cursor-default"
+                  key={i}
+                  className="group relative aspect-[4/3] overflow-hidden rounded-2xl shadow-sm"
                 >
-                  {/* Step Icon Node */}
-                  <div className="w-12 h-12 rounded-full bg-white border border-slate-200/90 shadow-sm flex items-center justify-center mb-3 transition-all duration-200 group-hover:scale-110 group-hover:shadow-md group-hover:border-amber-400">
-                    {step.icon}
+                  {img.right ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={img.src || "/placeholder.svg"}
+                      alt=""
+                      className={`absolute right-0 top-0 h-full w-[200%] max-w-none object-cover transition-transform duration-500 group-hover:scale-105 ${img.origin ?? ""}`}
+                    />
+                  ) : img.origin ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={img.src || "/placeholder.svg"}
+                      alt=""
+                      className={`absolute left-0 top-0 h-full w-[200%] max-w-none object-cover transition-transform duration-500 group-hover:scale-105 ${img.origin}`}
+                    />
+                  ) : (
+                    <Image
+                      src={img.src || "/placeholder.svg"}
+                      alt=""
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  )}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-2.5">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-white">
+                      {img.label}
+                    </span>
                   </div>
-
-                  {/* Step Meta */}
-                  <span className="font-mono text-[11px] font-bold text-slate-900 mb-0.5">
-                    {step.num}
-                  </span>
-                  <h3 className="font-mono text-[11px] sm:text-xs font-black tracking-wider uppercase text-slate-950 mb-1">
-                    {step.title}
-                  </h3>
-                  <p className="text-[11px] text-slate-600 font-medium leading-tight max-w-[120px]">
-                    {step.desc}
-                  </p>
                 </div>
               ))}
             </div>
@@ -328,47 +261,273 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Feature Value Cards */}
-      <section className="w-full px-6 sm:px-12 lg:px-16 py-12">
-        <div className="grid gap-6 md:grid-cols-3">
-          {[
-            {
-              icon: <ShieldCheck className="w-5 h-5 text-[#1E3A8A]" />,
-              title: "Verified Before It Counts",
-              body: "Every photo runs through AI verification first — eliminating spam, false alarms, and wasted authority response time.",
-            },
-            {
-              icon: <Sparkles className="w-5 h-5 text-[#FFC000]" />,
-              title: "Built to Keep You Reporting",
-              body: "Levels, streaks, and badges turn a public-good habit into an engaging and rewarding civic experience.",
-            },
-            {
-              icon: <Zap className="w-5 h-5 text-emerald-600" />,
-              title: "Open To Everyone",
-              body: "The live map shows every issue's verification status, authority assignment, and fix progress in open real-time.",
-            },
-          ].map((v) => (
-            <div
-              key={v.title}
-              className="rounded-xl border border-[#CBD5E1] bg-white/80 backdrop-blur-sm p-6 shadow-sm hover:shadow-md hover:border-slate-400 transition-all"
-            >
-              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center mb-4">
-                {v.icon}
-              </div>
-              <h3 className="font-display text-xl font-bold text-slate-950 uppercase tracking-tight">
-                {v.title}
-              </h3>
-              <p className="mt-2 text-sm text-slate-600 leading-relaxed font-medium">
-                {v.body}
+      {/* Stats */}
+      <section className="border-b border-asphalt-line bg-white">
+        <div className="mx-auto w-full max-w-[1600px] px-6 py-8 sm:px-10 lg:px-16">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {statCards.map((s) => {
+              const Icon = s.icon;
+              return (
+                <div key={s.label} className="flex items-start gap-3.5">
+                  <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${s.chip}`}>
+                    <Icon className={`h-5 w-5 ${s.accent}`} />
+                  </span>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      {s.label}
+                    </p>
+                    {s.value === undefined && !statsError ? (
+                      <div className="my-1 h-7 w-16 skeleton" />
+                    ) : s.value === undefined ? (
+                      <p className="font-display text-2xl font-extrabold leading-none text-slate-300">—</p>
+                    ) : (
+                      <p className="font-display text-2xl font-extrabold leading-none text-slate-900">
+                        {s.value.toLocaleString()}
+                        {s.suffix ?? ""}
+                      </p>
+                    )}
+                    <p className="mt-1 text-[11px] leading-none text-slate-400">{s.caption}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {statsError && (
+            <p className="mt-3 text-center text-xs text-slate-400">
+              Live statistics are temporarily unavailable.
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* Departments */}
+      <section className="mx-auto w-full max-w-[1600px] px-6 py-16 sm:px-10 lg:px-16">
+        <div className="mb-10 max-w-2xl">
+          <p className="eyebrow mb-2">Report by Category</p>
+          <h2 className="font-display text-3xl font-extrabold tracking-tight text-slate-950 text-balance">
+            One platform for every civic issue
+          </h2>
+          <p className="mt-3 text-slate-600">
+            Choose a department to file a report. Each issue is verified, routed
+            and tracked to resolution.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {departments.map((d) => {
+            const Icon = d.icon;
+            return (
+              <Link key={d.name} href={d.href} className="card-interactive group flex flex-col p-6">
+                <span className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl ${d.chip}`}>
+                  <Icon className={`h-6 w-6 ${d.accent}`} />
+                </span>
+                <h3 className="font-display text-lg font-bold text-slate-900">{d.name}</h3>
+                <p className="mt-1.5 flex-1 text-sm leading-relaxed text-slate-600">{d.desc}</p>
+                <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-teal">
+                  Report now
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="border-y border-asphalt-line bg-white">
+        <div className="mx-auto w-full max-w-[1600px] px-6 py-16 sm:px-10 lg:px-16">
+          <div className="mb-12 max-w-2xl">
+            <p className="eyebrow mb-2">How CivicAI Works</p>
+            <h2 className="font-display text-3xl font-extrabold tracking-tight text-slate-950 text-balance">
+              From report to resolution in four steps
+            </h2>
+          </div>
+
+          <div className="relative grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="absolute left-0 right-0 top-6 hidden h-px bg-asphalt-line lg:block" />
+            {steps.map((step) => {
+              const Icon = step.icon;
+              return (
+                <div key={step.num} className="relative">
+                  <div className="mb-4 flex items-center gap-3">
+                    <span className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full border border-asphalt-line bg-white shadow-sm">
+                      <Icon className="h-5 w-5 text-teal" />
+                    </span>
+                    <span className="font-mono text-sm font-bold text-slate-300">{step.num}</span>
+                  </div>
+                  <h3 className="font-display text-base font-bold text-slate-900">{step.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{step.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Rewards */}
+      <section className="mx-auto w-full max-w-[1600px] px-6 py-16 sm:px-10 lg:px-16">
+        <div className="card overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-2">
+            <div className="p-8 sm:p-12">
+              <p className="eyebrow mb-2">Civic Rewards</p>
+              <h2 className="font-display text-3xl font-extrabold tracking-tight text-slate-950 text-balance">
+                Get rewarded for making your city better
+              </h2>
+              <p className="mt-3 text-slate-600">
+                Every verified report and resolved issue earns you civic points.
+                Climb the leaderboard, unlock badges and redeem points for
+                rewards from local partners.
               </p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <Link href="/rewards" className="btn-secondary px-5 py-3 text-sm">
+                  <Gift className="h-[18px] w-[18px]" />
+                  Explore Rewards
+                </Link>
+                <Link href="/leaderboard" className="btn-ghost px-5 py-3 text-sm">
+                  View Leaderboard
+                </Link>
+              </div>
             </div>
-          ))}
+            <div className="flex flex-col justify-center gap-4 border-t border-asphalt-line bg-asphalt-surface p-8 sm:p-12 lg:border-l lg:border-t-0">
+              {[
+                { icon: Award, title: "Earn on every report", desc: "Points for verified and resolved issues." },
+                { icon: TrendingUp, title: "Climb the leaderboard", desc: "See how you rank in your community." },
+                { icon: Gift, title: "Redeem for rewards", desc: "Turn civic points into real perks." },
+              ].map((r) => {
+                const Icon = r.icon;
+                return (
+                  <div key={r.title} className="flex items-center gap-4 rounded-xl border border-asphalt-line bg-white p-4">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-dim">
+                      <Icon className="h-5 w-5 text-amber-600" />
+                    </span>
+                    <div>
+                      <p className="font-semibold text-slate-900">{r.title}</p>
+                      <p className="text-sm text-slate-500">{r.desc}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust */}
+      <section className="border-t border-asphalt-line bg-white">
+        <div className="mx-auto w-full max-w-[1600px] px-6 py-16 sm:px-10 lg:px-16">
+          <div className="mb-10 max-w-2xl">
+            <p className="eyebrow mb-2">Built on Trust</p>
+            <h2 className="font-display text-3xl font-extrabold tracking-tight text-slate-950 text-balance">
+              Transparent, accountable, community-driven
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {[
+              {
+                icon: ShieldCheck,
+                title: "Verified before it counts",
+                body: "Every photo runs through AI verification first — eliminating spam, false alarms and wasted authority response time.",
+                accent: "text-teal",
+                chip: "bg-teal-dim",
+              },
+              {
+                icon: Sparkles,
+                title: "Built to keep you engaged",
+                body: "Levels, streaks and badges turn a public-good habit into a genuinely rewarding civic experience.",
+                accent: "text-amber-600",
+                chip: "bg-amber-dim",
+              },
+              {
+                icon: Activity,
+                title: "Open to everyone",
+                body: "The live map shows every issue's verification status, authority assignment and fix progress in real time.",
+                accent: "text-emerald-600",
+                chip: "bg-emerald-100",
+              },
+            ].map((v) => {
+              const Icon = v.icon;
+              return (
+                <div key={v.title} className="card p-6">
+                  <span className={`mb-4 flex h-11 w-11 items-center justify-center rounded-xl ${v.chip}`}>
+                    <Icon className={`h-5 w-5 ${v.accent}`} />
+                  </span>
+                  <h3 className="font-display text-lg font-bold text-slate-900">{v.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">{v.body}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="border-t border-asphalt-line bg-teal">
+        <div className="mx-auto flex w-full max-w-[1600px] flex-col items-center gap-6 px-6 py-14 text-center sm:px-10 lg:px-16">
+          <h2 className="font-display text-3xl font-extrabold tracking-tight text-white text-balance sm:text-4xl">
+            Spotted a civic issue? Report it now.
+          </h2>
+          <p className="max-w-xl text-teal-dim/90 text-blue-100">
+            Join thousands of citizens building cleaner, safer cities — one report at a time.
+          </p>
+          <Link href="/report" className="btn-primary px-7 py-3.5 text-sm">
+            <Wrench className="h-[18px] w-[18px]" />
+            Report an Issue
+            <ArrowUpRight className="h-4 w-4 opacity-60" />
+          </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="w-full border-t border-[#CBD5E1] py-6 px-6 text-center text-xs font-mono font-medium text-slate-500 bg-[#E7ECF0]">
-        CIVIC AI — REVOLUTIONIZING CIVIC INFRASTRUCTURE WITH AI
+      <footer className="border-t border-asphalt-line bg-asphalt">
+        <div className="mx-auto w-full max-w-[1600px] px-6 py-12 sm:px-10 lg:px-16">
+          <div className="flex flex-col justify-between gap-8 md:flex-row">
+            <div className="max-w-sm">
+              <Link href="/" className="flex items-center gap-2.5">
+                <div className="grid grid-cols-2 gap-0.5 rounded-lg bg-teal p-1.5">
+                  <span className="h-2 w-2 rounded-[2px] bg-amber" />
+                  <span className="h-2 w-2 rounded-[2px] bg-white/70" />
+                  <span className="h-2 w-2 rounded-[2px] bg-white/70" />
+                  <span className="h-2 w-2 rounded-[2px] bg-amber" />
+                </div>
+                <span className="font-display text-lg font-extrabold tracking-tight text-slate-950">
+                  Civic<span className="text-teal">AI</span>
+                </span>
+              </Link>
+              <p className="mt-3 text-sm leading-relaxed text-slate-500">
+                Revolutionizing civic infrastructure with AI — report, track and
+                resolve community issues transparently.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+              <div>
+                <p className="eyebrow mb-3">Platform</p>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li><Link href="/report" className="hover:text-teal">Report Issue</Link></li>
+                  <li><Link href="/map" className="hover:text-teal">Live Map</Link></li>
+                  <li><Link href="/dashboard" className="hover:text-teal">Dashboard</Link></li>
+                </ul>
+              </div>
+              <div>
+                <p className="eyebrow mb-3">Community</p>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li><Link href="/leaderboard" className="hover:text-teal">Leaderboard</Link></li>
+                  <li><Link href="/rewards" className="hover:text-teal">Rewards</Link></li>
+                </ul>
+              </div>
+              <div>
+                <p className="eyebrow mb-3">Departments</p>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li><Link href="/sanitation/dashboard" className="hover:text-teal">Sanitation</Link></li>
+                  <li><Link href="/electricity/dashboard" className="hover:text-teal">Electricity</Link></li>
+                  <li><Link href="/drainage/dashboard" className="hover:text-teal">Drainage</Link></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div className="mt-10 border-t border-asphalt-line pt-6 text-center font-mono text-[11px] font-medium uppercase tracking-wider text-slate-400">
+            CivicAI — Revolutionizing Civic Infrastructure with AI
+          </div>
+        </div>
       </footer>
     </div>
   );
