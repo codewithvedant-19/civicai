@@ -54,34 +54,33 @@ export default function AdminPage() {
   if (!settings) return null;
 
   return (
-    <div className="min-h-screen bg-[#E7ECF0] blueprint-bg text-slate-900">
+    <div className="min-h-screen bg-asphalt blueprint-bg text-slate-900">
       <Navbar user={user} />
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 py-10">
-        <div className="mb-6 bg-white/80 backdrop-blur-sm p-6 rounded-2xl border border-[#CBD5E1] shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-[#FFC000] text-slate-950 rounded-xl shadow-sm">
-              <ShieldCheck size={26} />
-            </div>
-            <div>
-              <h1 className="font-display text-3xl font-black uppercase tracking-tight text-slate-950">Super Admin Console</h1>
-              <p className="text-xs text-slate-600 font-medium">System configuration, AI confidence thresholds, and user roles</p>
-            </div>
+      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+        <div className="mb-6 flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal text-white shadow-sm">
+            <ShieldCheck size={24} />
+          </div>
+          <div>
+            <p className="eyebrow mb-1">Administration</p>
+            <h1 className="font-display text-3xl font-extrabold tracking-tight text-slate-950">Super Admin Console</h1>
+            <p className="mt-1 text-sm text-slate-600">System configuration, AI confidence thresholds, and user roles.</p>
           </div>
         </div>
 
-        {msg && <p className="mb-6 rounded-xl bg-emerald-50 border border-emerald-200 p-3.5 text-xs font-bold text-emerald-800">{msg}</p>}
+        {msg && <p className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-sm font-semibold text-emerald-800">{msg}</p>}
 
         {/* Active providers */}
         {providers && (
-          <section className="mb-8 rounded-2xl border border-[#CBD5E1] bg-white p-6 shadow-sm">
+          <section className="card mb-8 p-6">
             <h2 className="mb-3 font-mono text-xs font-bold uppercase tracking-wider text-slate-500">
               Active Integration Providers
             </h2>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {Object.entries(providers).map(([k, v]) => (
-                <div key={k} className="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+                <div key={k} className="rounded-xl border border-asphalt-line bg-asphalt-surface p-3.5">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k}</div>
-                  <div className="mt-1 font-mono text-xs font-bold text-blue-700">{v}</div>
+                  <div className="mt-1 font-mono text-xs font-bold text-teal">{v}</div>
                 </div>
               ))}
             </div>
@@ -89,8 +88,8 @@ export default function AdminPage() {
         )}
 
         {/* Thresholds */}
-        <section className="mb-8 rounded-2xl border border-[#CBD5E1] bg-white p-6 shadow-sm">
-          <h2 className="mb-4 font-display text-xl font-bold uppercase tracking-tight text-slate-950">Configurable Thresholds</h2>
+        <section className="card mb-8 p-6">
+          <h2 className="mb-4 font-display text-xl font-bold tracking-tight text-slate-950">Configurable Thresholds</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <NumField
               label="AI confidence threshold (0.0 - 1.0)"
@@ -114,23 +113,20 @@ export default function AdminPage() {
               onChange={(v) => setSettings({ ...settings, priorityThresholds: { ...settings.priorityThresholds, criticalReporterCount: v } })}
             />
           </div>
-          <button
-            onClick={saveSettings}
-            className="mt-5 rounded-xl bg-[#FFC000] hover:bg-[#EBB000] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-950 shadow-sm"
-          >
+          <button onClick={saveSettings} className="btn-primary mt-5 px-5 py-2.5 text-sm">
             Save thresholds
           </button>
         </section>
 
         {/* User / role management */}
-        <section className="mb-8 rounded-2xl border border-[#CBD5E1] bg-white p-6 shadow-sm">
-          <h2 className="mb-4 font-display text-xl font-bold uppercase tracking-tight text-slate-950">Users &amp; Roles</h2>
+        <section className="card mb-8 p-6">
+          <h2 className="mb-4 font-display text-xl font-bold tracking-tight text-slate-950">Users &amp; Roles</h2>
           <div className="space-y-2">
             {users.map((u) => (
-              <div key={u.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3.5">
+              <div key={u.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-asphalt-line bg-asphalt-surface p-3.5">
                 <div>
-                  <div className="text-sm font-bold text-slate-900">{u.name} <span className="text-xs text-slate-500 font-mono">· {u.email}</span></div>
-                  <div className="text-xs text-slate-600 font-medium">Role: <span className="font-semibold text-blue-700 uppercase">{u.role.replace(/_/g, " ")}</span></div>
+                  <div className="text-sm font-bold text-slate-900">{u.name} <span className="font-mono text-xs text-slate-500">· {u.email}</span></div>
+                  <div className="text-xs font-medium text-slate-600">Role: <span className="font-semibold uppercase text-teal">{u.role.replace(/_/g, " ")}</span></div>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {(["citizen", "officer", "authority_admin", "super_admin"] as const).map((r) => (
@@ -139,8 +135,8 @@ export default function AdminPage() {
                       onClick={() => setRole(u.id, r, authorities[0]?.id)}
                       className={`rounded-lg px-2.5 py-1 text-[11px] font-bold uppercase transition-all ${
                         u.role === r
-                          ? "bg-[#FFC000] text-slate-950 shadow-sm"
-                          : "bg-white border border-slate-200 text-slate-600 hover:text-slate-950"
+                          ? "bg-teal text-white shadow-sm"
+                          : "border border-asphalt-line bg-white text-slate-600 hover:text-slate-950"
                       }`}
                     >
                       {r.replace("_", " ")}
@@ -153,12 +149,12 @@ export default function AdminPage() {
         </section>
 
         {/* Audit log */}
-        <section className="rounded-2xl border border-[#CBD5E1] bg-white p-6 shadow-sm">
-          <h2 className="mb-4 font-display text-xl font-bold uppercase tracking-tight text-slate-950">Audit Log</h2>
-          <div className="space-y-2 max-h-80 overflow-y-auto">
-            {logs.length === 0 && <p className="text-xs text-slate-500">No actions logged yet.</p>}
+        <section className="card p-6">
+          <h2 className="mb-4 font-display text-xl font-bold tracking-tight text-slate-950">Audit Log</h2>
+          <div className="max-h-80 space-y-2 overflow-y-auto">
+            {logs.length === 0 && <p className="text-sm text-slate-500">No actions logged yet.</p>}
             {logs.map((l) => (
-              <div key={l.id} className="flex justify-between text-xs text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-100 font-medium">
+              <div key={l.id} className="flex justify-between rounded-lg border border-slate-100 bg-asphalt-surface p-2.5 text-xs font-medium text-slate-700">
                 <span>{l.action}: {l.details}</span>
                 <span className="font-mono text-[11px] text-slate-400">{new Date(l.createdAt).toLocaleString()}</span>
               </div>
@@ -172,14 +168,14 @@ export default function AdminPage() {
 
 function NumField({ label, value, step = 1, onChange }: { label: string; value: number; step?: number; onChange: (v: number) => void }) {
   return (
-    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+    <label className="block text-xs font-semibold text-slate-700">
       {label}
       <input
         type="number"
         step={step}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="mt-1.5 w-full rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-[#FFC000]"
+        className="mt-1.5 w-full rounded-xl border border-asphalt-line bg-asphalt-surface px-3.5 py-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-teal-light focus:ring-2 focus:ring-teal-light/40"
       />
     </label>
   );

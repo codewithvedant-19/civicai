@@ -72,27 +72,28 @@ export default function AuthorityDashboard() {
   }));
 
   return (
-    <div className="min-h-screen bg-[#E7ECF0] blueprint-bg text-slate-900">
+    <div className="min-h-screen bg-asphalt blueprint-bg text-slate-900">
       <Navbar user={user} />
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/80 backdrop-blur-sm p-6 rounded-2xl border border-[#CBD5E1] shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-[#FFC000] text-slate-950 rounded-xl shadow-sm">
-              <Building2 size={26} />
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal text-white shadow-sm">
+              <Building2 size={24} />
             </div>
             <div>
-              <h1 className="font-display text-3xl font-black uppercase tracking-tight text-slate-950">Authority Portal</h1>
-              <p className="text-xs text-slate-600 font-medium">Logged in as {user.role.replace(/_/g, " ")} — {user.name}</p>
+              <p className="eyebrow mb-1">Authority Portal</p>
+              <h1 className="font-display text-3xl font-extrabold tracking-tight text-slate-950">Dispatch Console</h1>
+              <p className="mt-1 text-sm capitalize text-slate-600">{user.role.replace(/_/g, " ")} — {user.name}</p>
             </div>
           </div>
 
-          <div className="flex bg-slate-200/80 p-1 rounded-xl border border-slate-300">
+          <div className="flex rounded-xl border border-asphalt-line bg-white p-1 shadow-sm">
             {(["queue", "map", "analytics"] as const).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={`rounded-lg px-4 py-1.5 text-xs font-mono font-bold uppercase transition-all ${
-                  view === v ? "bg-white text-slate-950 shadow-sm" : "text-slate-600 hover:text-slate-950"
+                className={`rounded-lg px-4 py-1.5 text-xs font-bold uppercase tracking-wide transition-all ${
+                  view === v ? "bg-teal text-white shadow-sm" : "text-slate-600 hover:text-slate-950"
                 }`}
               >
                 {v}
@@ -102,8 +103,8 @@ export default function AuthorityDashboard() {
         </div>
 
         {critical.length > 0 && (
-          <div className="mb-6 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-bold text-red-700 shadow-sm">
-            <AlertOctagon size={20} className="text-red-600 shrink-0" />
+          <div className="mb-6 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700 shadow-sm">
+            <AlertOctagon size={20} className="shrink-0 text-red-600" />
             <span>{critical.length} critical issue{critical.length > 1 ? "s" : ""} requiring urgent municipal dispatch.</span>
           </div>
         )}
@@ -117,7 +118,15 @@ export default function AuthorityDashboard() {
 
         {view === "queue" && (
           <div className="space-y-4">
-            {sorted.length === 0 && <p className="text-xs text-slate-500 bg-white p-6 rounded-2xl border border-slate-200">No issues in the dispatch queue.</p>}
+            {sorted.length === 0 && (
+              <div className="card flex flex-col items-center gap-3 p-10 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                  <CheckCircle2 size={26} />
+                </div>
+                <p className="text-sm font-semibold text-slate-700">Dispatch queue is clear</p>
+                <p className="max-w-xs text-sm text-slate-500">No issues are waiting for action right now.</p>
+              </div>
+            )}
             {sorted.map((issue) => (
               <div key={issue.id} className="space-y-2">
                 <IssueCard issue={issue} damageClass={damageClasses.find((d) => d.id === issue.damageClassId)} href={`/issues/${issue.id}`} />
@@ -148,15 +157,15 @@ export default function AuthorityDashboard() {
         )}
 
         {view === "map" && (
-          <div className="h-[520px] rounded-2xl overflow-hidden border border-[#CBD5E1] shadow-sm bg-white">
+          <div className="card h-[520px] overflow-hidden">
             <MapView markers={markers} center={userLoc || (markers[0] ? [markers[0].lat, markers[0].lng] : [39.78, -89.65])} />
           </div>
         )}
 
         {view === "analytics" && (
           <div className="grid gap-6 md:grid-cols-2">
-            <div className="rounded-2xl border border-[#CBD5E1] bg-white p-6 shadow-sm">
-              <h3 className="mb-4 font-display text-xl font-bold uppercase tracking-tight text-slate-950">Severity Distribution</h3>
+            <div className="card p-6">
+              <h3 className="mb-4 font-display text-xl font-bold tracking-tight text-slate-950">Severity Distribution</h3>
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={severityData}>
                   <XAxis dataKey="name" stroke="#64748B" fontSize={12} />
@@ -166,8 +175,8 @@ export default function AuthorityDashboard() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div className="rounded-2xl border border-[#CBD5E1] bg-white p-6 shadow-sm">
-              <h3 className="mb-4 font-display text-xl font-bold uppercase tracking-tight text-slate-950">Priority Bands</h3>
+            <div className="card p-6">
+              <h3 className="mb-4 font-display text-xl font-bold tracking-tight text-slate-950">Priority Bands</h3>
               <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
                   <Pie data={bandData} dataKey="value" nameKey="name" outerRadius={85}>
@@ -188,9 +197,9 @@ export default function AuthorityDashboard() {
 
 function Stat({ label, value, highlight }: { label: string; value: number; highlight?: string }) {
   return (
-    <div className="rounded-2xl border border-[#CBD5E1] bg-white p-5 shadow-sm text-center">
-      <div className={`font-mono text-3xl font-black ${highlight ?? "text-slate-950"}`}>{value}</div>
-      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-tight mt-1">{label}</div>
+    <div className="card p-5 text-center">
+      <div className={`font-display text-3xl font-extrabold ${highlight ?? "text-slate-950"}`}>{value}</div>
+      <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</div>
     </div>
   );
 }
